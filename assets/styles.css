@@ -52,3 +52,13 @@ body[data-rate-mode="single"] .statement-panel td:nth-child(4){display:none}
 #dailyStatementSection .statement-footer{gap:12px;flex-wrap:wrap}
 #dailyPeriodFilter{max-width:100%;min-width:230px}
 @media(max-width:600px){#dailyPeriodFilter{max-width:100%;width:100%;min-width:0}#dailyStatementSection .statement-actions{width:100%}}
+
+/* SEO educational section – human-readable, responsive, and part of the page */
+.seo-guide{margin-top:22px;padding:25px 28px}
+.seo-guide-body{color:var(--muted);font-size:13px;line-height:1.75}
+.seo-guide-body>p{margin:14px 0 20px}
+.seo-guide-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 29px;margin:13px 0 20px}
+.seo-guide h3{color:var(--text);font-size:14px;font-weight:750;line-height:1.4;margin:17px 0 6px}
+.seo-guide-grid p{margin:0 0 9px}
+.seo-guide .guide-disclaimer{font-size:11px;color:var(--muted-2);border-top:1px solid var(--line);padding-top:15px}
+@media(max-width:650px){.seo-guide{padding:20px 19px}.seo-guide-grid{grid-template-columns:1fr;gap:3px}.seo-guide-body{font-size:12px}}
