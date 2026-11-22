@@ -1,10 +1,10 @@
 import { buildSchedule, DEFAULTS, parseLocalizedNumber } from './calc.mjs';
 const $ = id => document.getElementById(id);
-const fields = ['initialBalance','monthlyDeposit','threshold','firstAER','excessAER','years','currency','taxRate','stampRate'];
-const moneyFields = new Set(['initialBalance','monthlyDeposit','threshold']);
+const fields = ['initialBalance','monthlyDeposit','threshold','firstAER','excessAER','years','currency','taxRate','stampRate','monthlyFee'];
+const moneyFields = new Set(['initialBalance','monthlyDeposit','threshold','monthlyFee']);
 const parseInput = (field,value) => parseLocalizedNumber(value,moneyFields.has(field)?'money':'decimal');
 const displayInput = (field,value) => ['currency','years'].includes(field) ? String(value) : String(value).replace('.', ',');
-const aliases = {initialBalance:'start',monthlyDeposit:'deposit',threshold:'limit',firstAER:'rate1',excessAER:'rate2',tieredInterest:'tiered',years:'years',currency:'currency',taxRate:'tax',stampDuty:'stamp',stampRate:'stampRate'};
+const aliases = {initialBalance:'start',monthlyDeposit:'deposit',threshold:'limit',firstAER:'rate1',excessAER:'rate2',tieredInterest:'tiered',years:'years',currency:'currency',taxRate:'tax',stampDuty:'stamp',stampRate:'stampRate',monthlyFeeEnabled:'monthlyFeeEnabled',monthlyFee:'monthlyFee'};
 const settingKey = 'savings-studio-settings-v1';
 const themeKey = 'savings-studio-theme-v1';
 let settings = {...DEFAULTS}, projection, selectedYear = '1', chartMetric = 'interest', toastTimer;
@@ -36,7 +36,7 @@ function load(){
   } catch(e){}
   const params = new URLSearchParams(location.search);
   for(const [field,key] of Object.entries(aliases)){
-    if(params.has(key)) settings[field] = field==='currency' ? params.get(key) : ['stampDuty','tieredInterest'].includes(field) ? ['true','1'].includes(params.get(key)) : parseInput(field,params.get(key));
+    if(params.has(key)) settings[field] = field==='currency' ? params.get(key) : ['stampDuty','tieredInterest','monthlyFeeEnabled'].includes(field) ? ['true','1'].includes(params.get(key)) : parseInput(field,params.get(key));
   }
 }
 function inputs(){
@@ -44,11 +44,15 @@ function inputs(){
   $('stampDuty').checked=settings.stampDuty;
   $('tieredInterest').checked=settings.tieredInterest;
   $('stampRateContainer').hidden=!settings.stampDuty;
+  $('monthlyFeeEnabled').checked=settings.monthlyFeeEnabled;
+  $('monthlyFeeContainer').hidden=!settings.monthlyFeeEnabled;
 }
 function render(){
   projection = buildSchedule(settings);
   settings = projection.settings;
   $('yearsValue').textContent=settings.years;
+  $('monthlyFeeEnabled').checked=settings.monthlyFeeEnabled;
+  $('monthlyFeeContainer').hidden=!settings.monthlyFeeEnabled;
   const isTiered = settings.tieredInterest;
   $('tieredInterest').checked=isTiered;
   $('thresholdControl').hidden=!isTiered;
@@ -65,7 +69,7 @@ function render(){
   $('totalInterest').textContent=signedMoney(projection.netProfit);
   $('durationLabel').textContent=settings.years + (settings.years===1?' year':' years');
   $('totalContributions').textContent=money(projection.totalDeposits);
-  $('heroInterest').textContent=signedMoney(projection.netProfit);
+  $('heroInterest').textContent=signedMoney(projection.accountNetGrowth);
   $('heroFinal').textContent=money(projection.closingBalance);
   $('firstMonthInterest').textContent='+'+money(months[0].netInterest);
   $('lastMonthLabel').textContent='MONTH '+last.index;
@@ -75,6 +79,11 @@ function render(){
   $('taxGrossInterest').textContent=money(projection.totalInterest);
   $('taxWithheld').textContent='−'+money(projection.totalTax);
   $('taxStamp').textContent='−'+money(projection.totalStampDuty);
+  $('planFeesTotal').textContent='−'+money(projection.totalMonthlyFees);
+  $('effectiveFinalValue').textContent=money(projection.balanceAfterExternalFees);
+  $('monthlyFeeNote').textContent=settings.monthlyFeeEnabled
+    ? 'The '+money(settings.monthlyFee)+' plan fee is paid outside savings each month: it reduces total economic profit but not the bank balance or interest compounding.'
+    : 'Plan fees are excluded. Enable them if your savings rate requires a paid subscription.';
   $('taxNetInterest').textContent='+'+money(projection.totalNetInterest);
   $('taxNetProfit').textContent=signedMoney(projection.netProfit);
   $('grossFinal').textContent=money(projection.grossClosingBalance);
@@ -100,12 +109,12 @@ function render(){
 }
 function table(){
   const rows=selectedYear==='all'?projection.months:projection.months.filter(m=>m.year===Number(selectedYear));
-  $('statementRows').innerHTML=rows.map(m=>'<tr><td>'+String(m.index).padStart(2,'0')+'</td><td>'+money(m.openingBalance)+'</td><td>'+money(m.firstInterest)+'</td><td>'+money(m.excessInterest)+'</td><td>'+money(m.interest)+'</td><td class="tax-amount">−'+money(m.tax)+'</td><td class="interest">+'+money(m.netInterest)+'</td><td>'+money(m.deposit)+'</td><td class="tax-amount">'+(m.stampDuty?'−'+money(m.stampDuty):'—')+'</td><td>'+money(m.closingBalance)+'</td></tr>').join('');
+  $('statementRows').innerHTML=rows.map(m=>'<tr><td>'+String(m.index).padStart(2,'0')+'</td><td>'+money(m.openingBalance)+'</td><td>'+money(m.firstInterest)+'</td><td>'+money(m.excessInterest)+'</td><td>'+money(m.interest)+'</td><td class="tax-amount">−'+money(m.tax)+'</td><td class="interest">+'+money(m.netInterest)+'</td><td>'+money(m.deposit)+'</td><td class="tax-amount">'+(m.stampDuty?'−'+money(m.stampDuty):'—')+'</td><td class="tax-amount">'+(m.monthlyFee?'−'+money(m.monthlyFee):'—')+'</td><td class="interest">'+signedMoney(m.netMonthlyBenefit)+'</td><td>'+money(m.closingBalance)+'</td></tr>').join('');
   $('tableCount').textContent='Showing '+rows.length+' of '+projection.months.length+' months';
 }
 function chart(){
   const svg=$('growthChart'), months=projection.months;
-  const primary=months.map(m=>chartMetric==='interest'?m.netInterest:m.closingBalance);
+  const primary=months.map(m=>chartMetric==='interest'?m.netMonthlyBenefit:m.closingBalance);
   const secondary=months.map(m=>chartMetric==='interest'?m.interest:m.grossClosingBalance);
   const W=760,H=264,L=65,R=10,T=12,B=20,pw=W-L-R,ph=H-T-B;
   const max=Math.max(0.01,...primary,...secondary)*1.14;
@@ -120,10 +129,10 @@ function chart(){
   }
   const last=coords[coords.length-1];
   svg.innerHTML=grid+'<path class="chart-area" d="'+path(coords)+' L'+last.x+','+(T+ph)+' L'+L+','+(T+ph)+' Z"/><path class="chart-line-secondary" d="'+path(ghost)+'"/><path class="chart-line" d="'+path(coords)+'"/><line id="focusGuide" class="focus-guide" x1="0" x2="0" y1="'+T+'" y2="'+(T+ph)+'" style="display:none"/><circle id="focusDot" class="focus-dot" cx="0" cy="0" r="5" style="display:none"/><rect id="chartHit" x="'+L+'" y="'+T+'" width="'+pw+'" height="'+ph+'" fill="transparent"/>';
-  $('chartLegend').textContent=chartMetric==='interest'?'Net monthly credit':'After-tax account balance';
+  $('chartLegend').textContent=chartMetric==='interest'?'Net monthly benefit':'After-tax account balance';
   $('chartSecondaryLegend').textContent=chartMetric==='interest'?'Gross monthly interest':'Balance without taxes';
   $('chartEndLabel').textContent='Month '+months.length;
-  svg.setAttribute('aria-label',chartMetric==='interest'?'Net monthly credit compared with gross interest':'After-tax balance compared with hypothetical balance before tax');
+  svg.setAttribute('aria-label',chartMetric==='interest'?'Net monthly benefit after tax and fees compared with gross interest':'After-tax balance compared with hypothetical balance before tax');
   for(const metric of ['interest','balance']){
     const b=$(metric+'ChartBtn');
     b.classList.toggle('active',chartMetric===metric);
@@ -150,8 +159,8 @@ function chart(){
   svg.onpointerleave=()=>{tooltip.hidden=true;$('focusGuide').style.display='none';$('focusDot').style.display='none';};
 }
 function exportCSV(){
-  const header=['Month','Year','Opening balance','First-tier gross interest','Excess-tier gross interest','Gross interest','Tax withheld','Net interest credited','Additional contribution','Stamp duty','Closing balance','Cumulative tax','Cumulative stamp duty','Cumulative net interest'];
-  const data=projection.months.map(m=>[m.index,m.year,m.openingBalance,m.firstInterest,m.excessInterest,m.interest,m.tax,m.netInterest,m.deposit,m.stampDuty,m.closingBalance,m.totalTax,m.totalStampDuty,m.totalNetInterest].map((n,i)=>i<2?String(n):Number(n).toFixed(2)).join(','));
+  const header=['Month','Year','Opening balance','First-tier gross interest','Excess-tier gross interest','Gross interest','Tax withheld','Net interest credited','Additional contribution','Stamp duty','Plan fee (paid externally)','Net monthly benefit','Closing account balance','Cumulative tax','Cumulative stamp duty','Cumulative plan fees','Cumulative net interest'];
+  const data=projection.months.map(m=>[m.index,m.year,m.openingBalance,m.firstInterest,m.excessInterest,m.interest,m.tax,m.netInterest,m.deposit,m.stampDuty,m.monthlyFee,m.netMonthlyBenefit,m.closingBalance,m.totalTax,m.totalStampDuty,m.totalMonthlyFees,m.totalNetInterest].map((n,i)=>i<2?String(n):Number(n).toFixed(2)).join(','));
   const file=new Blob(['\uFEFF'+[header.join(','),...data].join('\r\n')],{type:'text/csv;charset=utf-8;'});
   const url=URL.createObjectURL(file),a=document.createElement('a');
   a.href=url;a.download='savings-studio-after-tax-monthly.csv';document.body.appendChild(a);a.click();a.remove();
@@ -193,6 +202,7 @@ function init(){
     });
   }
   $('stampDuty').addEventListener('change',e=>{settings.stampDuty=e.target.checked;render();});
+  $('monthlyFeeEnabled').addEventListener('change',e=>{settings.monthlyFeeEnabled=e.target.checked;render();});
   $('tieredInterest').addEventListener('change',e=>{settings.tieredInterest=e.target.checked;render();});
   $('yearFilter').addEventListener('change',e=>{selectedYear=e.target.value;table();});
   $('interestChartBtn').addEventListener('click',()=>{chartMetric='interest';chart();});
