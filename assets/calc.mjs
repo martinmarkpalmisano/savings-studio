@@ -4,6 +4,22 @@
  */
 export function roundMoney(value){return Math.round((value+Number.EPSILON)*100)/100;}
 export function effectiveMonthlyRate(aerPercent){return Math.pow(1+aerPercent/100,1/12)-1;}
+/** Accept Italian decimal commas, English decimal points and grouped money amounts. */
+export function parseLocalizedNumber(value, kind='decimal'){
+  if(typeof value==='number')return value;
+  const raw=String(value??'').trim().replace(/[\\s\\u00A0\\u202F]/g,'');
+  if(!raw || !/^[0-9.,]+$/.test(raw))return NaN;
+  const comma=raw.lastIndexOf(','),dot=raw.lastIndexOf('.');
+  let canonical=raw;
+  if(comma!==-1&&dot!==-1){
+    canonical=comma>dot ? raw.replaceAll('.','').replace(',','.') : raw.replaceAll(',','');
+  }else if(comma!==-1){
+    canonical=raw.replace(',','.');
+  }else if(kind==='money'&&/^\\d{1,3}(\\.\\d{3})+$/.test(raw)){
+    canonical=raw.replaceAll('.','');
+  }
+  return Number(canonical);
+}
 function safeNumber(value,fallback,max){const n=Number(value);return Number.isFinite(n)&&n>=0&&n<=max?n:fallback;}
 export const DEFAULTS=Object.freeze({
   initialBalance:20000,monthlyDeposit:0,threshold:15000,
