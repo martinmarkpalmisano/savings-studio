@@ -22,7 +22,7 @@ export function parseLocalizedNumber(value, kind='decimal'){
 }
 function safeNumber(value,fallback,max){const n=Number(value);return Number.isFinite(n)&&n>=0&&n<=max?n:fallback;}
 export const DEFAULTS=Object.freeze({
-  initialBalance:20000,monthlyDeposit:0,threshold:15000,
+  initialBalance:20000,monthlyDeposit:0,threshold:15000,tieredInterest:true,
   firstAER:3.5,excessAER:1.25,years:5,currency:'EUR',
   taxRate:26,stampDuty:false,stampRate:0.2
 });
@@ -31,6 +31,7 @@ export function normalizeSettings(input={}){
     initialBalance:roundMoney(safeNumber(input.initialBalance,DEFAULTS.initialBalance,1e12)),
     monthlyDeposit:roundMoney(safeNumber(input.monthlyDeposit,DEFAULTS.monthlyDeposit,1e10)),
     threshold:roundMoney(safeNumber(input.threshold,DEFAULTS.threshold,1e12)),
+    tieredInterest:![false,'false',0,'0'].includes(input.tieredInterest),
     firstAER:safeNumber(input.firstAER,DEFAULTS.firstAER,100),
     excessAER:safeNumber(input.excessAER,DEFAULTS.excessAER,100),
     years:Math.round(safeNumber(input.years,DEFAULTS.years,30))||1,
@@ -46,12 +47,12 @@ export function buildSchedule(rawSettings={}){
   const r2=effectiveMonthlyRate(settings.excessAER);
   let balance=settings.initialBalance,grossBalance=balance;
   let totalFirstInterest=0,totalExcessInterest=0,totalTax=0,totalNetInterest=0,totalStampDuty=0;
-  let firstExceedMonth=balance>settings.threshold?0:null;
+  let firstExceedMonth=settings.tieredInterest&&balance>settings.threshold?0:null;
   const months=[];
   for(let i=1;i<=settings.years*12;i++){
     const openingBalance=balance;
-    const firstTierBalance=Math.min(openingBalance,settings.threshold);
-    const excessTierBalance=Math.max(0,openingBalance-settings.threshold);
+    const firstTierBalance=settings.tieredInterest?Math.min(openingBalance,settings.threshold):openingBalance;
+    const excessTierBalance=settings.tieredInterest?Math.max(0,openingBalance-settings.threshold):0;
     const firstInterest=roundMoney(firstTierBalance*r1);
     const excessInterest=roundMoney(excessTierBalance*r2);
     const interest=roundMoney(firstInterest+excessInterest);
@@ -68,10 +69,10 @@ export function buildSchedule(rawSettings={}){
       balance=roundMoney(balance-stampDuty);
       totalStampDuty=roundMoney(totalStampDuty+stampDuty);
     }
-    const grossFirst=Math.min(grossBalance,settings.threshold);
-    const grossExcess=Math.max(0,grossBalance-settings.threshold);
+    const grossFirst=settings.tieredInterest?Math.min(grossBalance,settings.threshold):grossBalance;
+    const grossExcess=settings.tieredInterest?Math.max(0,grossBalance-settings.threshold):0;
     grossBalance=roundMoney(grossBalance+roundMoney(grossFirst*r1)+roundMoney(grossExcess*r2)+settings.monthlyDeposit);
-    if(firstExceedMonth===null&&balance>settings.threshold)firstExceedMonth=i;
+    if(settings.tieredInterest&&firstExceedMonth===null&&balance>settings.threshold)firstExceedMonth=i;
     months.push({
       index:i,year:Math.ceil(i/12),monthOfYear:((i-1)%12)+1,
       openingBalance,firstTierBalance,excessTierBalance,
