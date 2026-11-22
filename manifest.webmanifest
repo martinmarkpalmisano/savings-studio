@@ -1,7 +1,7 @@
 {
-  "name": "Savings Studio – Tiered Interest Calculator",
+  "name": "Savings Studio – Daily & Monthly Savings Calculator",
   "short_name": "Savings Studio",
-  "description": "Monthly savings interest and compound growth across two AER tiers.",
+  "description": "Free daily or monthly savings calculator with Italian interest tax, tiered rates, stamp duty and fees.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
