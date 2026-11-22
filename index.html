@@ -45,15 +45,21 @@
             <div class="input-money"><span data-symbol>€</span><input id="monthlyDeposit" type="text" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false" min="0" step="0.01" value="0" /></div>
             <span class="helper">Added at the end of each month. Interest is never withdrawn.</span>
           </div>
-          <div class="tier-head"><span>INTEREST TIERS</span><span class="tier-sub">AER / YEAR</span></div>
+          <div class="tier-head"><span id="interestRateHeading">INTEREST TIERS</span><span class="tier-sub">AER / YEAR</span></div>
+          <label class="check-line tier-mode-control" for="tieredInterest">
+            <input type="checkbox" id="tieredInterest" checked aria-describedby="tierModeDescription" />
+            <span><strong>Use tiered interest</strong><small id="tierModeDescription">Different rates above and below a balance threshold.</small></span>
+          </label>
           <div class="tier-card tier-card-first">
-            <div class="tier-title"><span class="tier-dot"></span> Tier 1 <span class="tier-badge">UP TO LIMIT</span></div>
+            <div class="tier-title"><span class="tier-dot"></span> <span id="firstTierTitle">Tier 1</span> <span class="tier-badge" id="firstTierBadge">UP TO LIMIT</span></div>
             <label for="firstAER">Annual Equivalent Rate</label>
             <div class="input-suffix"><input id="firstAER" type="text" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false" min="0" max="100" step="0.01" value="3.5" /><span>%</span></div>
-            <label for="threshold">Balance threshold</label>
-            <div class="input-money"><span data-symbol>€</span><input id="threshold" type="text" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false" min="0" step="0.01" value="15000" /></div>
+            <div class="threshold-control" id="thresholdControl">
+              <label for="threshold">Balance threshold</label>
+              <div class="input-money"><span data-symbol>€</span><input id="threshold" type="text" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false" min="0" step="0.01" value="15000" /></div>
+            </div>
           </div>
-          <div class="tier-card tier-card-second">
+          <div class="tier-card tier-card-second" id="excessTierCard">
             <div class="tier-title"><span class="tier-dot"></span> Tier 2 <span class="tier-badge">AMOUNT ABOVE LIMIT</span></div>
             <label for="excessAER">Annual Equivalent Rate</label>
             <div class="input-suffix"><input id="excessAER" type="text" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false" min="0" max="100" step="0.01" value="1.25" /><span>%</span></div>
@@ -130,7 +136,7 @@
 
       <section class="panel statement-panel">
         <div class="statement-head"><div><span class="eyebrow">06 / EVERY PAYMENT</span><h2>Month-by-month statement</h2><p>See gross interest, taxes, net interest credited and annual stamp duty every month.</p></div><div class="statement-actions"><select id="yearFilter" aria-label="Filter statement by year"><option value="1">Year 1</option></select><button class="action-button secondary" type="button" id="exportBtn">↓ Export CSV</button></div></div>
-        <div class="table-scroll"><table><thead><tr><th scope="col">MONTH</th><th scope="col">OPENING BALANCE</th><th scope="col">FIRST TIER</th><th scope="col">EXCESS TIER</th><th scope="col">GROSS INTEREST</th><th scope="col">WITHHOLDING</th><th scope="col">NET CREDITED</th><th scope="col">DEPOSIT</th><th scope="col">STAMP DUTY</th><th scope="col">CLOSING BALANCE</th></tr></thead><tbody id="statementRows"></tbody></table></div>
+        <div class="table-scroll"><table><thead><tr><th scope="col">MONTH</th><th scope="col">OPENING BALANCE</th><th scope="col" id="statementRateColumn">FIRST TIER</th><th scope="col">EXCESS TIER</th><th scope="col">GROSS INTEREST</th><th scope="col">WITHHOLDING</th><th scope="col">NET CREDITED</th><th scope="col">DEPOSIT</th><th scope="col">STAMP DUTY</th><th scope="col">CLOSING BALANCE</th></tr></thead><tbody id="statementRows"></tbody></table></div>
         <div class="statement-footer"><span id="tableCount">—</span><button class="text-btn" type="button" id="copyLinkBtn">↗ Share your settings</button></div>
       </section>
 
