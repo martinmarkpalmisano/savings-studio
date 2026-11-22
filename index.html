@@ -45,14 +45,27 @@
             <div class="input-money"><span data-symbol>€</span><input id="monthlyDeposit" type="text" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false" min="0" step="0.01" value="0" /></div>
             <span class="helper">Added at the end of each month. Interest is never withdrawn.</span>
           </div>
-          <div class="tier-head"><span id="interestRateHeading">INTEREST TIERS</span><span class="tier-sub">AER / YEAR</span></div>
+          <div class="tier-head"><span id="interestRateHeading">INTEREST TIERS</span><span class="tier-sub" id="rateTypeLabel">GROSS P.A.</span></div>
+          <div class="control-group">
+            <label for="creditFrequency">Interest payment frequency</label>
+            <select id="creditFrequency" aria-describedby="frequencyDescription">
+              <option value="daily">Daily (Revolut Italy)</option>
+              <option value="monthly">Monthly</option>
+            </select>
+            <span class="helper" id="frequencyDescription">Daily mode uses the gross annual rate divided by 365, or 366 in leap years, and credits amounts of at least €0.01.</span>
+          </div>
+          <div class="control-group" id="startDateControl">
+            <label for="startDate">Projection start date</label>
+            <input id="startDate" type="date" value="2026-11-22" />
+            <span class="helper">Used for actual calendar days, leap years and your dated daily statement.</span>
+          </div>
           <label class="check-line tier-mode-control" for="tieredInterest">
             <input type="checkbox" id="tieredInterest" checked aria-describedby="tierModeDescription" />
             <span><strong>Use tiered interest</strong><small id="tierModeDescription">Different rates above and below a balance threshold.</small></span>
           </label>
           <div class="tier-card tier-card-first">
             <div class="tier-title"><span class="tier-dot"></span> <span id="firstTierTitle">Tier 1</span> <span class="tier-badge" id="firstTierBadge">UP TO LIMIT</span></div>
-            <label for="firstAER">Annual Equivalent Rate</label>
+            <label for="firstAER" id="firstRateLabel">Annual interest rate (gross p.a.)</label>
             <div class="input-suffix"><input id="firstAER" type="text" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false" min="0" max="100" step="0.01" value="3.5" /><span>%</span></div>
             <div class="threshold-control" id="thresholdControl">
               <label for="threshold">Balance threshold</label>
@@ -61,7 +74,7 @@
           </div>
           <div class="tier-card tier-card-second" id="excessTierCard">
             <div class="tier-title"><span class="tier-dot"></span> Tier 2 <span class="tier-badge">AMOUNT ABOVE LIMIT</span></div>
-            <label for="excessAER">Annual Equivalent Rate</label>
+            <label for="excessAER" id="excessRateLabel">Annual interest rate (gross p.a.)</label>
             <div class="input-suffix"><input id="excessAER" type="text" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false" min="0" max="100" step="0.01" value="1.25" /><span>%</span></div>
           </div>
 
@@ -113,8 +126,8 @@
           </section>
 
           <section class="metrics" aria-label="Interest highlights">
-            <div class="mini-card"><div class="mini-head"><span>MONTH 01</span><span class="mini-icon green">↗</span></div><div class="mini-label">First net monthly credit</div><strong id="firstMonthInterest">—</strong><small>Credited to your account</small></div>
-            <div class="mini-card"><div class="mini-head"><span id="lastMonthLabel">MONTH 60</span><span class="mini-icon gold">◷</span></div><div class="mini-label">Final net monthly credit</div><strong id="lastMonthInterest">—</strong><small>Includes compound growth</small></div>
+            <div class="mini-card"><div class="mini-head"><span>MONTH 01</span><span class="mini-icon green">↗</span></div><div class="mini-label">First month — net interest</div><strong id="firstMonthInterest">—</strong><small>Credited to your account</small></div>
+            <div class="mini-card"><div class="mini-head"><span id="lastMonthLabel">MONTH 60</span><span class="mini-icon gold">◷</span></div><div class="mini-label">Last month — net interest</div><strong id="lastMonthInterest">—</strong><small>Includes compound growth</small></div>
           </section>
 
           <section class="panel graph-panel">
@@ -154,7 +167,32 @@
         <div class="statement-footer"><span id="tableCount">—</span><button class="text-btn" type="button" id="copyLinkBtn">↗ Share your settings</button></div>
       </section>
 
-      <details class="explain-panel"><summary>How is interest calculated? <span>+</span></summary><div><p>Each portion of the opening balance earns its own annual equivalent rate (AER). We convert each AER to an effective monthly rate using <code>(1 + AER / 100)^(1/12) − 1</code>.</p><p>Gross interest is rounded to cents for each tier. The configured Italian withholding tax (default 26%) is deducted when interest is credited. Only net interest compounds; any monthly top-up is added at month-end.</p><p>If enabled, annual stamp duty is estimated at the selected rate (default 0.20%) on the year-end balance, with a €1 minimum, and deducted every 12 months. Actual bank charges depend on statement timing and product terms. This is an illustrative estimate, not a tax determination.</p><p>When the optional monthly plan fee is enabled, it is assumed to be paid outside the savings account. The account balance and future interest are therefore unchanged, but total profit and monthly net benefit are reduced by each subscription payment.</p><p>This is an illustrative forecast, not a bank statement. Banks can accrue interest daily, use different rounding rules, change advertised rates, and apply different rates, taxes or fees. Switching currencies changes the symbol, not the numeric amounts.</p></div></details>
+      <section class="panel statement-panel" id="dailyStatementSection">
+        <div class="statement-head">
+          <div>
+            <span class="eyebrow">07 / DAILY PAYMENTS</span>
+            <h2>Day-by-day statement</h2>
+            <p>Daily gross interest, estimated 26% withholding, net credited payment and closing savings balance, using real dates.</p>
+          </div>
+          <div class="statement-actions">
+            <select id="dailyPeriodFilter" aria-label="Choose monthly period of the daily statement"></select>
+            <button class="action-button secondary" type="button" id="exportDailyBtn">↓ Export daily CSV</button>
+          </div>
+        </div>
+        <div class="table-scroll"><table><thead><tr>
+          <th scope="col">DATE</th><th scope="col">OPENING BALANCE</th>
+          <th scope="col">GROSS ACCRUED</th><th scope="col">TAX ESTIMATE</th>
+          <th scope="col">NET CREDITED</th><th scope="col">TOP-UP</th>
+          <th scope="col">STAMP DUTY</th><th scope="col">PLAN FEE</th>
+          <th scope="col">CLOSING BALANCE</th>
+        </tr></thead><tbody id="dailyStatementRows"></tbody></table></div>
+        <div class="statement-footer">
+          <span id="dailyTableCount">—</span>
+          <span class="helper">Interest and withholding accruals show 4 decimals; actual credited payments show cents. Fees are outside savings.</span>
+        </div>
+      </section>
+
+            <details class="explain-panel"><summary>How is interest calculated? <span>+</span></summary><div><p>Monthly mode treats inputs as AER and uses <code>(1 + AER / 100)^(1/12) − 1</code>. Daily mode treats the inputs as gross annual p.a. rates, calculates daily accrued interest using the actual calendar year (365/366 days), withholds 26% by default and carries fractional net cents until €0.01 can be credited. These are different rate conventions; the same number may produce different annual results.</p><p>Gross interest is rounded to cents for each tier. The configured Italian withholding tax (default 26%) is deducted when interest is credited. Only net interest compounds; any monthly top-up is added at month-end.</p><p>If enabled, annual stamp duty is estimated at the selected rate (default 0.20%) on the year-end balance, with a €1 minimum, and deducted every 12 months. Actual bank charges depend on statement timing and product terms. This is an illustrative estimate, not a tax determination.</p><p>When the optional monthly plan fee is enabled, it is assumed to be paid outside the savings account. The account balance and future interest are therefore unchanged, but total profit and monthly net benefit are reduced by each subscription payment.</p><p>This is an illustrative forecast, not a bank statement. Bank payment dates, taxes rounded to cents, rate conventions, promotional periods, and fees may differ from this projection. Switching currencies changes the symbol, not the numeric amounts.</p></div></details>
     </main>
     <footer class="site-footer"><span>✦ Savings Studio</span><span>Made for clarity. No sign-in · No tracking · No uploaded data.</span></footer>
   </div>
