@@ -37,3 +37,8 @@ td.tax-amount{color:var(--amber)}
 body[data-rate-mode="single"] .breakdown-panel{display:none}
 body[data-rate-mode="single"] .statement-panel th:nth-child(4),
 body[data-rate-mode="single"] .statement-panel td:nth-child(4){display:none}
+
+/* Optional monthly plan subscription: external expense, not a savings withdrawal */
+#monthlyFeeContainer[hidden]{display:none!important}
+#monthlyFeeContainer{padding:4px 0 6px}
+#monthlyFeeEnabled{accent-color:var(--mint)}
