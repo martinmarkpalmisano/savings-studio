@@ -138,7 +138,7 @@ function chart(){
 function exportCSV(){
   const header=['Month','Year','Opening balance','First-tier gross interest','Excess-tier gross interest','Gross interest','Tax withheld','Net interest credited','Additional contribution','Stamp duty','Closing balance','Cumulative tax','Cumulative stamp duty','Cumulative net interest'];
   const data=projection.months.map(m=>[m.index,m.year,m.openingBalance,m.firstInterest,m.excessInterest,m.interest,m.tax,m.netInterest,m.deposit,m.stampDuty,m.closingBalance,m.totalTax,m.totalStampDuty,m.totalNetInterest].map((n,i)=>i<2?String(n):Number(n).toFixed(2)).join(','));
-  const file=new Blob(['\\uFEFF'+[header.join(','),...data].join('\\r\\n')],{type:'text/csv;charset=utf-8;'});
+  const file=new Blob(['\uFEFF'+[header.join(','),...data].join('\r\n')],{type:'text/csv;charset=utf-8;'});
   const url=URL.createObjectURL(file),a=document.createElement('a');
   a.href=url;a.download='savings-studio-after-tax-monthly.csv';document.body.appendChild(a);a.click();a.remove();
   setTimeout(()=>URL.revokeObjectURL(url),1500);
