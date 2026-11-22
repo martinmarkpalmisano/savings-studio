@@ -23,6 +23,15 @@ A responsive, no-backend savings calculator that works on GitHub Pages and can b
 - Mobile-friendly, light/dark switch, installable as a PWA, available offline once loaded online.
 - No libraries, server, paid services, build tools, external API calls, or account required.
 
+## Search discoverability
+
+- The homepage has an English search title, accurate descriptions, canonical URL, social sharing tags, WebApplication structured data, and useful English/Italian guidance.
+- XML sitemap: https://martinmarkpalmisano.github.io/savings-studio/sitemap.xml
+- Submit that full sitemap URL in Google Search Console → **Sitemap**. After submission, use URL Inspection on the homepage to track indexing.
+- No project-level `robots.txt` is used. Search crawlers only apply robots rules served at the **host root** (`https://martinmarkpalmisano.github.io/robots.txt`), not inside `/savings-studio/`. A project-level file would not control Googlebot crawling.
+- Canonical points to the public GitHub Pages homepage; scenario query strings should consolidate to the same canonical page.
+- Indexing and search positions are determined by Google and are not guaranteed.
+
 ## Publish on GitHub Pages
 
 1. Sign in to GitHub and create a **new public repository**, for example `savings-studio`.
