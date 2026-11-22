@@ -42,3 +42,13 @@ body[data-rate-mode="single"] .statement-panel td:nth-child(4){display:none}
 #monthlyFeeContainer[hidden]{display:none!important}
 #monthlyFeeContainer{padding:4px 0 6px}
 #monthlyFeeEnabled{accent-color:var(--mint)}
+
+/* Dated daily interest statement and daily/monthly credit controls */
+#dailyStatementSection[hidden],#startDateControl[hidden]{display:none!important}
+#startDateControl input[type="date"]{width:100%;min-height:44px;border:1px solid var(--line);border-radius:9px;background:var(--control);color:var(--text);padding:0 12px;font:inherit;color-scheme:dark}
+[data-theme="light"] #startDateControl input[type="date"]{color-scheme:light}
+#creditFrequency{width:100%;min-height:44px}
+#dailyStatementSection td,#dailyStatementSection th{white-space:nowrap;font-variant-numeric:tabular-nums}
+#dailyStatementSection .statement-footer{gap:12px;flex-wrap:wrap}
+#dailyPeriodFilter{max-width:100%;min-width:230px}
+@media(max-width:600px){#dailyPeriodFilter{max-width:100%;width:100%;min-width:0}#dailyStatementSection .statement-actions{width:100%}}
