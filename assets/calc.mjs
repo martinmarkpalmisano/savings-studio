@@ -7,7 +7,7 @@ export function effectiveMonthlyRate(aerPercent){return Math.pow(1+aerPercent/10
 /** Accept Italian decimal commas, English decimal points and grouped money amounts. */
 export function parseLocalizedNumber(value, kind='decimal'){
   if(typeof value==='number')return value;
-  const raw=String(value??'').trim().replace(/[\\s\\u00A0\\u202F]/g,'');
+  const raw=String(value??'').trim().replace(/[\s\u00A0\u202F]/g,'');
   if(!raw || !/^[0-9.,]+$/.test(raw))return NaN;
   const comma=raw.lastIndexOf(','),dot=raw.lastIndexOf('.');
   let canonical=raw;
@@ -15,7 +15,7 @@ export function parseLocalizedNumber(value, kind='decimal'){
     canonical=comma>dot ? raw.replaceAll('.','').replace(',','.') : raw.replaceAll(',','');
   }else if(comma!==-1){
     canonical=raw.replace(',','.');
-  }else if(kind==='money'&&/^\\d{1,3}(\\.\\d{3})+$/.test(raw)){
+  }else if(kind==='money'&&/^\d{1,3}(\.\d{3})+$/.test(raw)){
     canonical=raw.replaceAll('.','');
   }
   return Number(canonical);
