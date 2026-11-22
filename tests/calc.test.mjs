@@ -85,3 +85,38 @@ test('Invalid localized inputs are rejected',()=>{
   assert.ok(Number.isNaN(parseLocalizedNumber('')));
   assert.ok(Number.isNaN(parseLocalizedNumber('hello')));
 });
+
+test('single-rate mode applies the first AER to the entire balance',()=>{
+  const p=buildSchedule({initialBalance:20000,threshold:15000,firstAER:6.25,excessAER:1.25,tieredInterest:false,years:1,taxRate:0});
+  const expected=Math.round(20000*effectiveMonthlyRate(6.25)*100)/100;
+  assert.equal(p.months[0].firstInterest,expected);
+  assert.equal(p.months[0].excessInterest,0);
+  assert.equal(p.months[0].firstTierBalance,20000);
+  assert.equal(p.months[0].excessTierBalance,0);
+  assert.equal(p.months[0].interest,expected);
+  assert.equal(p.firstExceedMonth,null);
+  assert.ok(p.months.every(m=>m.excessInterest===0));
+});
+test('single-rate mode preserves tax and compounding',()=>{
+  const p=buildSchedule({initialBalance:20000,tieredInterest:false,firstAER:6.25,years:2});
+  assert.equal(p.months[0].tax,Math.round(p.months[0].interest*.26*100)/100);
+  assert.equal(p.months[1].openingBalance,p.months[0].closingBalance);
+  assert.equal(Math.round((p.closingBalance-p.totalDeposits)*100),Math.round(p.netProfit*100));
+  assert.ok(p.grossClosingBalance>p.closingBalance);
+});
+test('enabling tiers restores the threshold and excess rate without changing those inputs',()=>{
+  const settings={initialBalance:20000,threshold:15000,firstAER:6.25,excessAER:1.25,years:1,taxRate:0};
+  const single=buildSchedule({...settings,tieredInterest:false});
+  const tiered=buildSchedule({...settings,tieredInterest:true});
+  assert.equal(single.settings.threshold,tiered.settings.threshold);
+  assert.equal(single.settings.excessAER,tiered.settings.excessAER);
+  assert.equal(tiered.months[0].firstTierBalance,15000);
+  assert.equal(tiered.months[0].excessTierBalance,5000);
+  assert.ok(single.months[0].interest>tiered.months[0].interest);
+});
+test('tiered interest is enabled by default for existing saved scenarios',()=>{
+  const p=buildSchedule({initialBalance:20000});
+  assert.equal(p.settings.tieredInterest,true);
+  assert.ok(p.months[0].excessInterest>0);
+  assert.equal(buildSchedule({initialBalance:20000,tieredInterest:'false'}).settings.tieredInterest,false);
+});
