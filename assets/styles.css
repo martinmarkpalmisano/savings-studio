@@ -5,3 +5,25 @@
 @media (max-width:760px){.shell{padding:0 16px}.site-header{height:70px}.privacy-label{display:none}.intro{padding:31px 0 25px}.intro p{font-size:13px;line-height:1.7}.layout{display:flex;flex-direction:column}.controls-panel,.results{width:100%}.controls-panel{padding:21px}.results{margin-top:1px}.tier-card{margin-bottom:11px}.hero-balance{font-size:clamp(35px,9vw,50px)}.hero-label{margin-top:23px}.hero-note{margin-bottom:23px}.metrics{gap:11px}.mini-card{padding:16px}.mini-card strong{font-size:22px}.mini-card .mini-label{font-size:11px}.statement-panel{margin-top:16px}.statement-head{align-items:stretch;flex-direction:column;padding:21px 19px 19px}.statement-actions{width:100%;justify-content:space-between}.statement-actions select{flex:1}.statement-actions .action-button{flex:1}.statement-footer{padding:13px 19px}th:first-child,td:first-child{padding-left:19px}th,td{padding:12px 17px}.site-footer{flex-direction:column;align-items:flex-start;gap:4px;margin-top:30px}.chart-wrap{height:218px}}
 @media (max-width:440px){.brand{font-size:12px;letter-spacing:.075em}.brand-icon{width:32px;height:32px}.hero-card{padding:19px 18px}.hero-top .eyebrow{font-size:9px}.forecast-tag{font-size:8px;padding:5px 8px}.hero-bottom{gap:6px}.hero-bottom small{font-size:7px;letter-spacing:0}.hero-bottom strong{font-size:11px}.hero-plus,.hero-equals{font-size:14px}.panel-heading{align-items:flex-start;flex-direction:column}.segmented{width:100%}.segmented button{flex:1}.breakdown-grid strong{font-size:19px}.mini-card strong{font-size:20px}.chart-wrap{height:210px}.chart-key{margin-top:18px}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+/* Savings Studio: Italian deposit tax details */
+.tax-settings{padding:2px 15px 16px;border:1px solid var(--line);background:var(--card-2);border-radius:12px}
+.tax-settings .control-group{margin-top:13px}
+.check-line{display:flex!important;align-items:flex-start;gap:11px!important;cursor:pointer;padding:17px 0 2px;margin:0!important;color:var(--text)!important}
+.check-line input{width:18px;height:18px;flex:0 0 18px;accent-color:var(--mint);margin:2px 0 0}
+.check-line strong{display:block;color:var(--text);font-size:12px}
+.check-line small{display:block;margin-top:4px;color:var(--muted-2);font-size:11px;line-height:1.5}
+#stampRateContainer[hidden]{display:none}
+.tax-panel{padding:24px 25px}
+.tax-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;padding:21px 0}
+.tax-metrics>div{min-width:0}
+.tax-metrics span,.tax-total span,.gross-comparison span{display:block;font-size:11px;color:var(--muted);line-height:1.4}
+.tax-metrics strong{display:block;font-size:21px;font-weight:750;overflow-wrap:anywhere;margin-top:5px}
+.negative{color:var(--amber)!important}.positive-text{color:var(--mint)}
+.tax-total,.gross-comparison{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:15px 0;border-top:1px solid var(--line)}
+.tax-total strong{color:var(--mint);font-size:21px;overflow-wrap:anywhere}
+.gross-comparison strong{font-size:16px;overflow-wrap:anywhere}
+.chart-key{gap:12px 20px;flex-wrap:wrap}
+.key-line.secondary{background:var(--amber)}
+.chart-wrap svg .chart-line-secondary{stroke:var(--amber);fill:none;stroke-width:2.5;stroke-dasharray:6 6;vector-effect:non-scaling-stroke;stroke-linejoin:round;stroke-linecap:round}
+td.tax-amount{color:var(--amber)}
+@media(max-width:440px){.tax-panel{padding:19px}.tax-metrics{gap:15px}.tax-metrics strong{font-size:17px}.tax-total,.gross-comparison{align-items:flex-start;flex-direction:column;gap:4px}.chart-key{font-size:10px}}
