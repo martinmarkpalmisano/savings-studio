@@ -79,6 +79,18 @@
               <span class="helper">Simplified annual estimate based on year-end balance, not exact bank statement dates.</span>
             </div>
           </div>
+          <div class="tier-head"><span>MONTHLY ACCOUNT COST</span><span class="tier-sub">OPTIONAL</span></div>
+          <div class="tax-settings">
+            <label class="check-line" for="monthlyFeeEnabled">
+              <input type="checkbox" id="monthlyFeeEnabled" aria-describedby="monthlyFeeDescription" />
+              <span><strong>Include monthly plan fee</strong><small id="monthlyFeeDescription">For example, a Revolut subscription needed to obtain the interest rate.</small></span>
+            </label>
+            <div class="control-group" id="monthlyFeeContainer" hidden>
+              <label for="monthlyFee">Monthly fee</label>
+              <div class="input-money"><span data-symbol>€</span><input id="monthlyFee" type="text" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false" value="9,99" /></div>
+              <span class="helper">Assumed paid from a separate account each month. It reduces your overall profit, not the savings balance or compounding.</span>
+            </div>
+          </div>
           <div class="control-group duration-group">
             <div class="label-row"><label for="years">Projection length</label><strong><span id="yearsValue">5</span> years</strong></div>
             <input id="years" type="range" min="1" max="30" step="1" value="5" />
@@ -96,8 +108,8 @@
             <div class="hero-top"><span class="eyebrow">02 / YOUR PROJECTION</span><span class="forecast-tag"><span class="status-dot"></span> LIVE FORECAST</span></div>
             <div class="hero-label">Projected account balance</div>
             <div id="endingBalance" class="hero-balance">€20.000,00</div>
-            <div class="hero-note"><span id="totalInterest" class="positive">+£0.00</span> <span>net gain after taxes and selected charges over <strong id="durationLabel">5 years</strong></span></div>
-            <div class="hero-bottom"><div><small>YOUR CONTRIBUTIONS</small><strong id="totalContributions">—</strong></div><span class="hero-plus">+</span><div><small>NET RETURN</small><strong id="heroInterest">—</strong></div><span class="hero-equals">=</span><div><small>FINAL BALANCE</small><strong id="heroFinal">—</strong></div></div>
+            <div class="hero-note"><span id="totalInterest" class="positive">+£0.00</span> <span>profit after taxes and optional plan fees over <strong id="durationLabel">5 years</strong></span></div>
+            <div class="hero-bottom"><div><small>YOUR CONTRIBUTIONS</small><strong id="totalContributions">—</strong></div><span class="hero-plus">+</span><div><small>ACCOUNT GROWTH</small><strong id="heroInterest">—</strong></div><span class="hero-equals">=</span><div><small>FINAL BALANCE</small><strong id="heroFinal">—</strong></div></div>
           </section>
 
           <section class="metrics" aria-label="Interest highlights">
@@ -126,21 +138,23 @@
               <div><span>Interest tax withheld</span><strong id="taxWithheld" class="negative">—</strong></div>
               <div><span>Net interest credited</span><strong id="taxNetInterest" class="positive-text">—</strong></div>
               <div><span>Estimated stamp duty</span><strong id="taxStamp" class="negative">—</strong></div>
+              <div><span>Monthly plan fees (total)</span><strong id="planFeesTotal" class="negative">—</strong></div>
             </div>
-            <div class="tax-total"><span>Net gain after selected taxes and charges</span><strong id="taxNetProfit">—</strong></div>
+            <div class="tax-total"><span>Net profit after all selected costs</span><strong id="taxNetProfit">—</strong></div>
+            <div class="gross-comparison"><span>Equivalent final value after external plan fees</span><strong id="effectiveFinalValue">—</strong></div>
             <div class="gross-comparison"><span>Hypothetical ending balance without tax</span><strong id="grossFinal">—</strong></div>
-            <p class="cross-note" id="taxSummaryNote">—</p>
+            <p class="cross-note" id="taxSummaryNote">—</p><p class="cross-note" id="monthlyFeeNote">Subscription fees are paid separately and do not lower the savings balance.</p>
           </section>
         </div>
       </div>
 
       <section class="panel statement-panel">
-        <div class="statement-head"><div><span class="eyebrow">06 / EVERY PAYMENT</span><h2>Month-by-month statement</h2><p>See gross interest, taxes, net interest credited and annual stamp duty every month.</p></div><div class="statement-actions"><select id="yearFilter" aria-label="Filter statement by year"><option value="1">Year 1</option></select><button class="action-button secondary" type="button" id="exportBtn">↓ Export CSV</button></div></div>
-        <div class="table-scroll"><table><thead><tr><th scope="col">MONTH</th><th scope="col">OPENING BALANCE</th><th scope="col" id="statementRateColumn">FIRST TIER</th><th scope="col">EXCESS TIER</th><th scope="col">GROSS INTEREST</th><th scope="col">WITHHOLDING</th><th scope="col">NET CREDITED</th><th scope="col">DEPOSIT</th><th scope="col">STAMP DUTY</th><th scope="col">CLOSING BALANCE</th></tr></thead><tbody id="statementRows"></tbody></table></div>
+        <div class="statement-head"><div><span class="eyebrow">06 / EVERY PAYMENT</span><h2>Month-by-month statement</h2><p>See gross interest, tax, net interest credited, stamp duty, and subscription costs for every month.</p></div><div class="statement-actions"><select id="yearFilter" aria-label="Filter statement by year"><option value="1">Year 1</option></select><button class="action-button secondary" type="button" id="exportBtn">↓ Export CSV</button></div></div>
+        <div class="table-scroll"><table><thead><tr><th scope="col">MONTH</th><th scope="col">OPENING BALANCE</th><th scope="col" id="statementRateColumn">FIRST TIER</th><th scope="col">EXCESS TIER</th><th scope="col">GROSS INTEREST</th><th scope="col">WITHHOLDING</th><th scope="col">NET CREDITED</th><th scope="col">DEPOSIT</th><th scope="col">STAMP DUTY</th><th scope="col">PLAN FEE</th><th scope="col">NET BENEFIT</th><th scope="col">CLOSING BALANCE</th></tr></thead><tbody id="statementRows"></tbody></table></div>
         <div class="statement-footer"><span id="tableCount">—</span><button class="text-btn" type="button" id="copyLinkBtn">↗ Share your settings</button></div>
       </section>
 
-      <details class="explain-panel"><summary>How is interest calculated? <span>+</span></summary><div><p>Each portion of the opening balance earns its own annual equivalent rate (AER). We convert each AER to an effective monthly rate using <code>(1 + AER / 100)^(1/12) − 1</code>.</p><p>Gross interest is rounded to cents for each tier. The configured Italian withholding tax (default 26%) is deducted when interest is credited. Only net interest compounds; any monthly top-up is added at month-end.</p><p>If enabled, annual stamp duty is estimated at the selected rate (default 0.20%) on the year-end balance, with a €1 minimum, and deducted every 12 months. Actual bank charges depend on statement timing and product terms. This is an illustrative estimate, not a tax determination.</p><p>This is an illustrative forecast, not a bank statement. Banks can accrue interest daily, use different rounding rules, change advertised rates, and apply different rates, taxes or fees. Switching currencies changes the symbol, not the numeric amounts.</p></div></details>
+      <details class="explain-panel"><summary>How is interest calculated? <span>+</span></summary><div><p>Each portion of the opening balance earns its own annual equivalent rate (AER). We convert each AER to an effective monthly rate using <code>(1 + AER / 100)^(1/12) − 1</code>.</p><p>Gross interest is rounded to cents for each tier. The configured Italian withholding tax (default 26%) is deducted when interest is credited. Only net interest compounds; any monthly top-up is added at month-end.</p><p>If enabled, annual stamp duty is estimated at the selected rate (default 0.20%) on the year-end balance, with a €1 minimum, and deducted every 12 months. Actual bank charges depend on statement timing and product terms. This is an illustrative estimate, not a tax determination.</p><p>When the optional monthly plan fee is enabled, it is assumed to be paid outside the savings account. The account balance and future interest are therefore unchanged, but total profit and monthly net benefit are reduced by each subscription payment.</p><p>This is an illustrative forecast, not a bank statement. Banks can accrue interest daily, use different rounding rules, change advertised rates, and apply different rates, taxes or fees. Switching currencies changes the symbol, not the numeric amounts.</p></div></details>
     </main>
     <footer class="site-footer"><span>✦ Savings Studio</span><span>Made for clarity. No sign-in · No tracking · No uploaded data.</span></footer>
   </div>
