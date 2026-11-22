@@ -1,6 +1,9 @@
-import { buildSchedule, DEFAULTS } from './calc.mjs';
+import { buildSchedule, DEFAULTS, parseLocalizedNumber } from './calc.mjs';
 const $ = id => document.getElementById(id);
 const fields = ['initialBalance','monthlyDeposit','threshold','firstAER','excessAER','years','currency','taxRate','stampRate'];
+const moneyFields = new Set(['initialBalance','monthlyDeposit','threshold']);
+const parseInput = (field,value) => parseLocalizedNumber(value,moneyFields.has(field)?'money':'decimal');
+const displayInput = (field,value) => ['currency','years'].includes(field) ? String(value) : String(value).replace('.', ',');
 const aliases = {initialBalance:'start',monthlyDeposit:'deposit',threshold:'limit',firstAER:'rate1',excessAER:'rate2',years:'years',currency:'currency',taxRate:'tax',stampDuty:'stamp',stampRate:'stampRate'};
 const settingKey = 'savings-studio-settings-v1';
 const themeKey = 'savings-studio-theme-v1';
@@ -33,11 +36,11 @@ function load(){
   } catch(e){}
   const params = new URLSearchParams(location.search);
   for(const [field,key] of Object.entries(aliases)){
-    if(params.has(key)) settings[field] = field==='currency' ? params.get(key) : field==='stampDuty' ? ['true','1'].includes(params.get(key)) : Number(params.get(key));
+    if(params.has(key)) settings[field] = field==='currency' ? params.get(key) : field==='stampDuty' ? ['true','1'].includes(params.get(key)) : parseInput(field,params.get(key));
   }
 }
 function inputs(){
-  fields.forEach(k=>$(k).value=settings[k]);
+  fields.forEach(k=>$(k).value=displayInput(k,settings[k]));
   $('stampDuty').checked=settings.stampDuty;
   $('stampRateContainer').hidden=!settings.stampDuty;
 }
@@ -166,9 +169,15 @@ function init(){
   for(const field of fields){
     const element=$(field);
     element.addEventListener(field==='years'?'input':'change',()=>{
-      settings[field]=field==='currency'?element.value:Number(element.value);
+      const entered=field==='currency'?element.value:parseInput(field,element.value);
+      if(field!=='currency' && !Number.isFinite(entered)){
+        toast('Please enter a valid amount or rate (e.g. 3,5).');
+        element.value=displayInput(field,settings[field]);
+        return;
+      }
+      settings[field]=entered;
       settings=buildSchedule(settings).settings;
-      element.value=settings[field];
+      element.value=displayInput(field,settings[field]);
       render();
     });
   }
