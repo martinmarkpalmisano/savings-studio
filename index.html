@@ -38,38 +38,38 @@
           <div class="panel-top"><div><span class="eyebrow">01 / CONFIGURE</span><h2>Your account</h2></div><button id="resetBtn" type="button" class="text-btn">↺ Reset</button></div>
           <div class="control-group">
             <label for="initialBalance">Starting balance <span class="hint" title="Money already in your savings account">ⓘ</span></label>
-            <div class="input-money"><span data-symbol>€</span><input id="initialBalance" type="number" inputmode="decimal" min="0" step="0.01" value="20000" /></div>
+            <div class="input-money"><span data-symbol>€</span><input id="initialBalance" type="text" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false" min="0" step="0.01" value="20000" /></div>
           </div>
           <div class="control-group">
             <label for="monthlyDeposit">Additional monthly deposit</label>
-            <div class="input-money"><span data-symbol>€</span><input id="monthlyDeposit" type="number" inputmode="decimal" min="0" step="0.01" value="0" /></div>
+            <div class="input-money"><span data-symbol>€</span><input id="monthlyDeposit" type="text" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false" min="0" step="0.01" value="0" /></div>
             <span class="helper">Added at the end of each month. Interest is never withdrawn.</span>
           </div>
           <div class="tier-head"><span>INTEREST TIERS</span><span class="tier-sub">AER / YEAR</span></div>
           <div class="tier-card tier-card-first">
             <div class="tier-title"><span class="tier-dot"></span> Tier 1 <span class="tier-badge">UP TO LIMIT</span></div>
             <label for="firstAER">Annual Equivalent Rate</label>
-            <div class="input-suffix"><input id="firstAER" type="number" inputmode="decimal" min="0" max="100" step="0.01" value="3.5" /><span>%</span></div>
+            <div class="input-suffix"><input id="firstAER" type="text" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false" min="0" max="100" step="0.01" value="3.5" /><span>%</span></div>
             <label for="threshold">Balance threshold</label>
-            <div class="input-money"><span data-symbol>€</span><input id="threshold" type="number" inputmode="decimal" min="0" step="0.01" value="15000" /></div>
+            <div class="input-money"><span data-symbol>€</span><input id="threshold" type="text" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false" min="0" step="0.01" value="15000" /></div>
           </div>
           <div class="tier-card tier-card-second">
             <div class="tier-title"><span class="tier-dot"></span> Tier 2 <span class="tier-badge">AMOUNT ABOVE LIMIT</span></div>
             <label for="excessAER">Annual Equivalent Rate</label>
-            <div class="input-suffix"><input id="excessAER" type="number" inputmode="decimal" min="0" max="100" step="0.01" value="1.25" /><span>%</span></div>
+            <div class="input-suffix"><input id="excessAER" type="text" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false" min="0" max="100" step="0.01" value="1.25" /><span>%</span></div>
           </div>
 
           <div class="tier-head"><span>ITALIAN TAXES</span><span class="tier-sub">EDITABLE</span></div>
           <div class="tax-settings">
             <div class="control-group">
               <label for="taxRate">Tax on interest (ritenuta fiscale)</label>
-              <div class="input-suffix"><input id="taxRate" type="number" inputmode="decimal" min="0" max="100" step="0.01" value="26" /><span>%</span></div>
+              <div class="input-suffix"><input id="taxRate" type="text" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false" min="0" max="100" step="0.01" value="26" /><span>%</span></div>
               <span class="helper">Default 26% withholding at monthly interest credit. Only net interest compounds.</span>
             </div>
             <label class="check-line" for="stampDuty"><input type="checkbox" id="stampDuty" /><span><strong>Include stamp duty</strong><small>Optional annual bollo for a conto deposito.</small></span></label>
             <div class="control-group" id="stampRateContainer" hidden>
               <label for="stampRate">Annual stamp duty rate</label>
-              <div class="input-suffix"><input id="stampRate" type="number" inputmode="decimal" min="0" max="100" step="0.01" value="0.2" /><span>%</span></div>
+              <div class="input-suffix"><input id="stampRate" type="text" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false" min="0" max="100" step="0.01" value="0.2" /><span>%</span></div>
               <span class="helper">Simplified annual estimate based on year-end balance, not exact bank statement dates.</span>
             </div>
           </div>
