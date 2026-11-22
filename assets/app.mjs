@@ -4,7 +4,7 @@ const fields = ['initialBalance','monthlyDeposit','threshold','firstAER','excess
 const moneyFields = new Set(['initialBalance','monthlyDeposit','threshold']);
 const parseInput = (field,value) => parseLocalizedNumber(value,moneyFields.has(field)?'money':'decimal');
 const displayInput = (field,value) => ['currency','years'].includes(field) ? String(value) : String(value).replace('.', ',');
-const aliases = {initialBalance:'start',monthlyDeposit:'deposit',threshold:'limit',firstAER:'rate1',excessAER:'rate2',years:'years',currency:'currency',taxRate:'tax',stampDuty:'stamp',stampRate:'stampRate'};
+const aliases = {initialBalance:'start',monthlyDeposit:'deposit',threshold:'limit',firstAER:'rate1',excessAER:'rate2',tieredInterest:'tiered',years:'years',currency:'currency',taxRate:'tax',stampDuty:'stamp',stampRate:'stampRate'};
 const settingKey = 'savings-studio-settings-v1';
 const themeKey = 'savings-studio-theme-v1';
 let settings = {...DEFAULTS}, projection, selectedYear = '1', chartMetric = 'interest', toastTimer;
@@ -36,18 +36,29 @@ function load(){
   } catch(e){}
   const params = new URLSearchParams(location.search);
   for(const [field,key] of Object.entries(aliases)){
-    if(params.has(key)) settings[field] = field==='currency' ? params.get(key) : field==='stampDuty' ? ['true','1'].includes(params.get(key)) : parseInput(field,params.get(key));
+    if(params.has(key)) settings[field] = field==='currency' ? params.get(key) : ['stampDuty','tieredInterest'].includes(field) ? ['true','1'].includes(params.get(key)) : parseInput(field,params.get(key));
   }
 }
 function inputs(){
   fields.forEach(k=>$(k).value=displayInput(k,settings[k]));
   $('stampDuty').checked=settings.stampDuty;
+  $('tieredInterest').checked=settings.tieredInterest;
   $('stampRateContainer').hidden=!settings.stampDuty;
 }
 function render(){
   projection = buildSchedule(settings);
   settings = projection.settings;
   $('yearsValue').textContent=settings.years;
+  const isTiered = settings.tieredInterest;
+  $('tieredInterest').checked=isTiered;
+  $('thresholdControl').hidden=!isTiered;
+  $('excessTierCard').hidden=!isTiered;
+  $('interestRateHeading').textContent=isTiered?'INTEREST TIERS':'INTEREST RATE';
+  $('firstTierTitle').textContent=isTiered?'Tier 1':'Single rate';
+  $('firstTierBadge').textContent=isTiered?'UP TO LIMIT':'FULL BALANCE';
+  $('tierModeDescription').textContent=isTiered?'Different rates above and below a balance threshold.':'One AER applies to your entire balance.';
+  $('statementRateColumn').textContent=isTiered?'FIRST TIER':'RATE INTEREST';
+  document.body.dataset.rateMode=isTiered?'tiered':'single';
   document.querySelectorAll('[data-symbol]').forEach(x=>x.textContent=({GBP:'£',EUR:'€',USD:'$'})[settings.currency]);
   const months=projection.months, last=months[months.length-1];
   $('endingBalance').textContent=money(projection.closingBalance);
@@ -182,6 +193,7 @@ function init(){
     });
   }
   $('stampDuty').addEventListener('change',e=>{settings.stampDuty=e.target.checked;render();});
+  $('tieredInterest').addEventListener('change',e=>{settings.tieredInterest=e.target.checked;render();});
   $('yearFilter').addEventListener('change',e=>{selectedYear=e.target.value;table();});
   $('interestChartBtn').addEventListener('click',()=>{chartMetric='interest';chart();});
   $('balanceChartBtn').addEventListener('click',()=>{chartMetric='balance';chart();});
