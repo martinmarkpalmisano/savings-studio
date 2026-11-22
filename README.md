@@ -14,7 +14,10 @@ A responsive, no-backend savings calculator that works on GitHub Pages and can b
 - Gross interest, interest tax, net interest and optional stamp duty are shown for each month.
 - Net monthly interest is credited **into the balance and never withdrawn**.
 - Optional monthly top-ups (applied at month-end).
-- Monthly-interest and balance charts, month-by-month statement with year filters, two-tier interest breakdown.
+- **Daily or monthly interest-credit mode** (Daily by default); use the date picker to set when the simulation starts.
+- Daily mode models Revolut Italy's daily p.a. rate / 365 (or / 366 in leap years), 26% withholding and interest cents carried until €0.01 can be paid. Monthly mode retains the effective AER/12 model.
+- Dated day-by-day statement with a monthly period selector, net credited amounts, taxes, deposits, stamp duty, fees and closing balance; full daily CSV export.
+- Monthly-interest and balance charts, month-by-month summary statement with year filters, two-tier interest breakdown.
 - Download the full history as CSV.
 - Settings remembered on each device. Use **Share your settings** for a link that opens the same scenario on another device.
 - Mobile-friendly, light/dark switch, installable as a PWA, available offline once loaded online.
@@ -61,22 +64,23 @@ Visit http://localhost:8000 and changes to source files become visible on refres
 Run the built-in test suite if Node.js is installed:
 
 ```bash
-node --test tests/calc.test.mjs
+node --test tests/*.test.mjs
 ```
 
 ## How calculations work
 
-For each rate, effective monthly rate is `(1 + AER/100)^(1/12) - 1`. Each month's opening balance is split at the tier threshold: `first = min(balance, threshold)` and `excess = max(balance - threshold, 0)`. When tiered interest is switched off, the entire opening balance earns the first AER and the excess tier earns nothing. The threshold and second AER are retained for later use. Each tier's gross monthly interest is rounded to cents. Configured interest withholding (26% by default for Italian bank deposits) is deducted when interest is paid monthly. Only net credited interest compounds, and any optional deposit is added at month-end. If enabled, annual stamp duty is approximated using the chosen rate (0.20% by default) on the year-end balance every 12 months, with a €1 minimum. Actual stamp duty can differ according to statement dates and bank terms. The gross comparison excludes all taxes and stamp duty. Plan fees are tracked separately as out-of-account spending: **account closing balance = deposits + after-tax interest − stamp duty**; **total economic profit = after-tax interest − stamp duty − plan fees**. Therefore, the equivalent final value after external fees is shown separately as the bank balance minus all monthly subscription costs.
+In **monthly payment mode**, For each rate, effective monthly rate is `(1 + AER/100)^(1/12) - 1`. In **daily mode**, rates are gross p.a. (not AER), and daily interest is the tier's closing balance multiplied by its annual rate and divided by 365 or 366 depending on the calendar year. The model carries fractional cents of **net** after-tax interest forward until one cent can be credited. It uses calendar months running from the chosen start date to the next monthly anniversary for top-ups and plan fees. Each month's opening balance is split at the tier threshold: `first = min(balance, threshold)` and `excess = max(balance - threshold, 0)`. When tiered interest is switched off, the entire opening balance earns the first AER and the excess tier earns nothing. The threshold and second AER are retained for later use. Each tier's gross monthly interest is rounded to cents. Configured interest withholding (26% by default for Italian bank deposits) is deducted when interest is paid monthly. Only net credited interest compounds, and any optional deposit is added at month-end. If enabled, annual stamp duty is approximated using the chosen rate (0.20% by default) on the year-end balance every 12 months, with a €1 minimum. Actual stamp duty can differ according to statement dates and bank terms. The gross comparison excludes all taxes and stamp duty. Plan fees are tracked separately as out-of-account spending: **account closing balance = deposits + after-tax interest − stamp duty**; **total economic profit = after-tax interest − stamp duty − plan fees**. Therefore, the equivalent final value after external fees is shown separately as the bank balance minus all monthly subscription costs.
 
-This is an illustrative model, not an exact prediction of a specific bank's statement. Banks may accrue interest daily, pay on a non-calendar schedule, change rates, use different rounding, or apply taxes and fees differently. Display-currency changes **do not perform currency conversion**.
+This is an illustrative model, not an exact prediction of a specific bank's statement. In daily mode, the table dates correspond to the modeled day of interest accrual/crediting; actual bank settlement posting can differ by a day. The daily gross and tax accrual columns show fractions of cents, while credited payments are shown to cents. Banks may accrue interest daily, pay on a non-calendar schedule, change rates, use different rounding, or apply taxes and fees differently. Display-currency changes **do not perform currency conversion**.
 
 ## Project files
 
 - `index.html` — app layout
 - `assets/styles.css` — mobile-responsive styling
-- `assets/app.mjs` — UI and charts
+- `assets/app.mjs` — UI, monthly charts and the daily/monthly statement views
+- `assets/daily.mjs` — real-date daily interest model
 - `assets/calc.mjs` — calculation logic (also used in tests)
 - `assets/favicon.svg`, `assets/icon-192.png`, `assets/icon-512.png` — site and home-screen icons
 - `manifest.webmanifest`, `sw.js` — home-screen support and offline cache
 - `.nojekyll` — static publishing without Jekyll
-- `tests/calc.test.mjs` — deterministic calculation checks
+- `tests/calc.test.mjs`, `tests/daily.test.mjs` — deterministic calculation checks
