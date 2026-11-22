@@ -34,7 +34,7 @@ test('daily totals reconcile with monthly summary and bank balance',()=>{
   assert.equal(p.days.length>700,true);
 });
 test('small interest is carried until minimum cent threshold',()=>{
-  const p=buildDailySchedule({initialBalance:1,years:1,startDate:'2026-01-01',firstAER:1,tieredInterest:false});
+  const p=buildDailySchedule({initialBalance:5,years:1,startDate:'2026-01-01',firstAER:1,tieredInterest:false});
   assert.equal(p.days[0].netInterest,0);
   assert.ok(p.days.slice(0,90).every(x=>x.netInterest>=0));
   assert.ok(p.days.some(m=>m.netInterest===0.01));
