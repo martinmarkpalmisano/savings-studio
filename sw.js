@@ -1,4 +1,4 @@
-const CACHE='savings-studio-v6';
+const CACHE='savings-studio-v7';
 const FILES=['./','./index.html','./assets/styles.css','./assets/app.mjs','./assets/calc.mjs','./assets/favicon.svg','./assets/icon-192.png','./assets/icon-512.png','./manifest.webmanifest'];
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(FILES)).then(()=>self.skipWaiting()));
