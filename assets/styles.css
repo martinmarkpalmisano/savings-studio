@@ -27,3 +27,13 @@
 .chart-wrap svg .chart-line-secondary{stroke:var(--amber);fill:none;stroke-width:2.5;stroke-dasharray:6 6;vector-effect:non-scaling-stroke;stroke-linejoin:round;stroke-linecap:round}
 td.tax-amount{color:var(--amber)}
 @media(max-width:440px){.tax-panel{padding:19px}.tax-metrics{gap:15px}.tax-metrics strong{font-size:17px}.tax-total,.gross-comparison{align-items:flex-start;flex-direction:column;gap:4px}.chart-key{font-size:10px}}
+
+/* Single-rate / tiered-rate switch */
+.tier-mode-control{background:var(--card-2);border:1px solid var(--line);border-radius:12px;padding:13px 15px!important;margin:0 0 12px!important;align-items:center!important;min-height:64px}
+.tier-mode-control input{width:20px;height:20px;flex-basis:20px;cursor:pointer}
+.tier-mode-control strong{font-size:12px}
+.tier-mode-control small{line-height:1.45}
+.threshold-control[hidden],#excessTierCard[hidden]{display:none!important}
+body[data-rate-mode="single"] .breakdown-panel{display:none}
+body[data-rate-mode="single"] .statement-panel th:nth-child(4),
+body[data-rate-mode="single"] .statement-panel td:nth-child(4){display:none}
