@@ -8,6 +8,9 @@ A responsive, no-backend savings calculator that works on GitHub Pages and can b
 - Two editable interest tiers (default: **3.50% AER for the first €15,000**, **1.25% AER on the excess**).
 - Italian tax estimate: default **26% interest withholding** at each monthly credit (editable). Net interest remains in the account and compounds.
 - Optional **0.20% annual deposit-account stamp duty** can be enabled and edited.
+- Optional **monthly account-plan fee** (default **€9.99**, adjustable). A switch includes/excludes the fee each month.
+- Subscriptions are assumed paid **outside the savings account**: they reduce overall economic profit, but do not reduce the account balance or its compounding.
+- The monthly statement, charts, CSV and tax panel distinguish **net interest credited** from **net benefit after external fees**, and show the effective final value after fees.
 - Gross interest, interest tax, net interest and optional stamp duty are shown for each month.
 - Net monthly interest is credited **into the balance and never withdrawn**.
 - Optional monthly top-ups (applied at month-end).
@@ -63,7 +66,7 @@ node --test tests/calc.test.mjs
 
 ## How calculations work
 
-For each rate, effective monthly rate is `(1 + AER/100)^(1/12) - 1`. Each month's opening balance is split at the tier threshold: `first = min(balance, threshold)` and `excess = max(balance - threshold, 0)`. When tiered interest is switched off, the entire opening balance earns the first AER and the excess tier earns nothing. The threshold and second AER are retained for later use. Each tier's gross monthly interest is rounded to cents. Configured interest withholding (26% by default for Italian bank deposits) is deducted when interest is paid monthly. Only net credited interest compounds, and any optional deposit is added at month-end. If enabled, annual stamp duty is approximated using the chosen rate (0.20% by default) on the year-end balance every 12 months, with a €1 minimum. Actual stamp duty can differ according to statement dates and bank terms. The gross comparison excludes all taxes and stamp duty.
+For each rate, effective monthly rate is `(1 + AER/100)^(1/12) - 1`. Each month's opening balance is split at the tier threshold: `first = min(balance, threshold)` and `excess = max(balance - threshold, 0)`. When tiered interest is switched off, the entire opening balance earns the first AER and the excess tier earns nothing. The threshold and second AER are retained for later use. Each tier's gross monthly interest is rounded to cents. Configured interest withholding (26% by default for Italian bank deposits) is deducted when interest is paid monthly. Only net credited interest compounds, and any optional deposit is added at month-end. If enabled, annual stamp duty is approximated using the chosen rate (0.20% by default) on the year-end balance every 12 months, with a €1 minimum. Actual stamp duty can differ according to statement dates and bank terms. The gross comparison excludes all taxes and stamp duty. Plan fees are tracked separately as out-of-account spending: **account closing balance = deposits + after-tax interest − stamp duty**; **total economic profit = after-tax interest − stamp duty − plan fees**. Therefore, the equivalent final value after external fees is shown separately as the bank balance minus all monthly subscription costs.
 
 This is an illustrative model, not an exact prediction of a specific bank's statement. Banks may accrue interest daily, pay on a non-calendar schedule, change rates, use different rounding, or apply taxes and fees differently. Display-currency changes **do not perform currency conversion**.
 
