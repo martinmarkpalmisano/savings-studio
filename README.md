@@ -4,8 +4,11 @@ A responsive, no-backend savings calculator that works on GitHub Pages and can b
 
 ## Features
 
-- Two editable interest tiers (default: **3.50% AER for the first £15,000**, **1.25% AER on the excess**).
-- Monthly interest is credited **into the balance and never withdrawn**.
+- Two editable interest tiers (default: **3.50% AER for the first €15,000**, **1.25% AER on the excess**).
+- Italian tax estimate: default **26% interest withholding** at each monthly credit (editable). Net interest remains in the account and compounds.
+- Optional **0.20% annual deposit-account stamp duty** can be enabled and edited.
+- Gross interest, interest tax, net interest and optional stamp duty are shown for each month.
+- Net monthly interest is credited **into the balance and never withdrawn**.
 - Optional monthly top-ups (applied at month-end).
 - Monthly-interest and balance charts, month-by-month statement with year filters, two-tier interest breakdown.
 - Download the full history as CSV.
@@ -59,9 +62,9 @@ node --test tests/calc.test.mjs
 
 ## How calculations work
 
-For each rate, effective monthly rate is `(1 + AER/100)^(1/12) - 1`. Each month's opening balance is split at the tier threshold: `first = min(balance, threshold)` and `excess = max(balance - threshold, 0)`. Each tier's monthly interest is rounded to 2 decimals, both interest portions are added to the balance, and the optional deposit is added at month-end. Next month's interest uses the new balance.
+For each rate, effective monthly rate is `(1 + AER/100)^(1/12) - 1`. Each month's opening balance is split at the tier threshold: `first = min(balance, threshold)` and `excess = max(balance - threshold, 0)`. Each tier's gross monthly interest is rounded to cents. Configured interest withholding (26% by default for Italian bank deposits) is deducted when interest is paid monthly. Only net credited interest compounds, and any optional deposit is added at month-end. If enabled, annual stamp duty is approximated using the chosen rate (0.20% by default) on the year-end balance every 12 months, with a €1 minimum. Actual stamp duty can differ according to statement dates and bank terms. The gross comparison excludes all taxes and stamp duty.
 
-This is an illustrative model, not an exact prediction of a specific bank's statement. Banks may accrue interest daily, pay on a non-calendar schedule, change rates, use different rounding, or deduct taxes/fees. Display-currency changes **do not perform currency conversion**.
+This is an illustrative model, not an exact prediction of a specific bank's statement. Banks may accrue interest daily, pay on a non-calendar schedule, change rates, use different rounding, or apply taxes and fees differently. Display-currency changes **do not perform currency conversion**.
 
 ## Project files
 
