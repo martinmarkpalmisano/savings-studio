@@ -25,7 +25,8 @@ export const DEFAULTS=Object.freeze({
   initialBalance:20000,monthlyDeposit:0,threshold:15000,tieredInterest:true,
   firstAER:3.5,excessAER:1.25,years:5,currency:'EUR',
   taxRate:26,stampDuty:false,stampRate:0.2,
-  monthlyFeeEnabled:false,monthlyFee:9.99
+  monthlyFeeEnabled:false,monthlyFee:9.99,
+  creditFrequency:'daily',startDate:'2026-11-22'
 });
 export function normalizeSettings(input={}){
   return {
@@ -41,7 +42,9 @@ export function normalizeSettings(input={}){
     stampDuty:input.stampDuty===true||input.stampDuty==='true',
     stampRate:safeNumber(input.stampRate,DEFAULTS.stampRate,100),
     monthlyFeeEnabled:input.monthlyFeeEnabled===true||input.monthlyFeeEnabled==='true',
-    monthlyFee:roundMoney(safeNumber(input.monthlyFee,DEFAULTS.monthlyFee,1e8))
+    monthlyFee:roundMoney(safeNumber(input.monthlyFee,DEFAULTS.monthlyFee,1e8)),
+    creditFrequency:input.creditFrequency==='monthly'?'monthly':'daily',
+    startDate:typeof input.startDate==='string'?input.startDate:DEFAULTS.startDate
   };
 }
 export function buildSchedule(rawSettings={}){
