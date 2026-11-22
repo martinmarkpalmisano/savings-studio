@@ -120,3 +120,42 @@ test('tiered interest is enabled by default for existing saved scenarios',()=>{
   assert.ok(p.months[0].excessInterest>0);
   assert.equal(buildSchedule({initialBalance:20000,tieredInterest:'false'}).settings.tieredInterest,false);
 });
+
+test('monthly plan fees reduce economic profit but not savings balance',()=>{
+  const options={initialBalance:20000,monthlyDeposit:0,years:2,monthlyFee:9.99};
+  const without=buildSchedule({...options,monthlyFeeEnabled:false});
+  const withFee=buildSchedule({...options,monthlyFeeEnabled:true});
+  assert.equal(withFee.closingBalance,without.closingBalance);
+  assert.equal(withFee.accountNetGrowth,without.accountNetGrowth);
+  assert.equal(withFee.totalMonthlyFees,239.76);
+  assert.equal(withFee.netProfit,Math.round((without.netProfit-239.76)*100)/100);
+  assert.equal(withFee.balanceAfterExternalFees,Math.round((withFee.closingBalance-239.76)*100)/100);
+});
+test('monthly fee appears in statement and monthly net benefit',()=>{
+  const p=buildSchedule({years:1,monthlyFeeEnabled:true,monthlyFee:9.99});
+  assert.equal(p.months.length,12);
+  assert.ok(p.months.every(m=>m.monthlyFee===9.99));
+  assert.equal(p.months[0].netMonthlyBenefit,Math.round((p.months[0].netInterest-9.99)*100)/100);
+  assert.equal(p.months[11].totalMonthlyFees,119.88);
+  assert.equal(p.months[0].closingBalance,Math.round((p.months[0].openingBalance+p.months[0].netInterest+p.months[0].deposit)*100)/100);
+});
+test('optional monthly fee defaults to off and costs zero',()=>{
+  const p=buildSchedule();
+  assert.equal(p.settings.monthlyFeeEnabled,false);
+  assert.equal(p.settings.monthlyFee,9.99);
+  assert.equal(p.totalMonthlyFees,0);
+  assert.equal(p.netProfit,p.accountNetGrowth);
+});
+test('net monthly benefit can be negative and stamp duty compounds separately',()=>{
+  const options={initialBalance:100,firstAER:0,excessAER:0,tieredInterest:false,
+    monthlyFeeEnabled:true,monthlyFee:9.99,stampDuty:true,years:1};
+  const p=buildSchedule(options);
+  assert.equal(p.months[0].netMonthlyBenefit,-9.99);
+  assert.ok(p.months[11].netMonthlyBenefit < -9.99);
+  assert.equal(p.totalMonthlyFees,119.88);
+  assert.equal(p.accountNetGrowth,-p.totalStampDuty);
+  assert.equal(p.netProfit,Math.round((-p.totalStampDuty-119.88)*100)/100);
+});
+test('localized comma monthly fee is supported',()=>{
+  assert.equal(parseLocalizedNumber('9,99','money'),9.99);
+});
