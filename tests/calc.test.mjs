@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {buildSchedule,effectiveMonthlyRate} from '../assets/calc.mjs';
+import {buildSchedule,effectiveMonthlyRate,parseLocalizedNumber} from '../assets/calc.mjs';
 test('AER compounds over 12 months',()=>{
   const r=effectiveMonthlyRate(3.5);
   assert.ok(Math.abs(Math.pow(1+r,12)-1.035)<1e-12);
@@ -67,4 +67,21 @@ test('defaults are euro and Italian bank interest withholding',()=>{
   const p=buildSchedule();
   assert.equal(p.settings.currency,'EUR');
   assert.equal(p.settings.taxRate,26);
+});
+
+test('Italian decimal comma accepted in interest rates',()=>{
+  assert.equal(parseLocalizedNumber('3,5'),3.5);
+  assert.equal(parseLocalizedNumber('1,25'),1.25);
+  assert.equal(parseLocalizedNumber('26,5'),26.5);
+});
+test('Dot decimals and common thousands separators are accepted',()=>{
+  assert.equal(parseLocalizedNumber('3.5'),3.5);
+  assert.equal(parseLocalizedNumber('15.000,75','money'),15000.75);
+  assert.equal(parseLocalizedNumber('15,000.75','money'),15000.75);
+  assert.equal(parseLocalizedNumber('15.000','money'),15000);
+});
+test('Invalid localized inputs are rejected',()=>{
+  assert.ok(Number.isNaN(parseLocalizedNumber('3,,5')));
+  assert.ok(Number.isNaN(parseLocalizedNumber('')));
+  assert.ok(Number.isNaN(parseLocalizedNumber('hello')));
 });
