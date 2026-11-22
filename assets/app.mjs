@@ -117,18 +117,24 @@ function chart(){
   const primary=months.map(m=>chartMetric==='interest'?m.netMonthlyBenefit:m.closingBalance);
   const secondary=months.map(m=>chartMetric==='interest'?m.interest:m.grossClosingBalance);
   const W=760,H=264,L=65,R=10,T=12,B=20,pw=W-L-R,ph=H-T-B;
-  const max=Math.max(0.01,...primary,...secondary)*1.14;
-  const coords=primary.map((v,i)=>({x:L+i/(primary.length-1)*pw,y:T+ph*(1-v/max)}));
-  const ghost=secondary.map((v,i)=>({x:L+i/(secondary.length-1)*pw,y:T+ph*(1-v/max)}));
+  const minValue=Math.min(0,...primary,...secondary);
+  const maxValue=Math.max(0.01,...primary,...secondary);
+  const pad=Math.max(1,(maxValue-minValue)*0.1);
+  const low=minValue-pad,high=maxValue+pad;
+  const mapY=v=>T+ph*(high-v)/(high-low);
+  const coords=primary.map((v,i)=>({x:L+i/(primary.length-1)*pw,y:mapY(v)}));
+  const ghost=secondary.map((v,i)=>({x:L+i/(secondary.length-1)*pw,y:mapY(v)}));
   const path=c=>c.map((p,i)=>(i?'L':'M')+p.x.toFixed(2)+','+p.y.toFixed(2)).join(' ');
   let grid='';
   for(let i=0;i<=4;i++){
     const y=T+ph*i/4;
     grid+='<line class="gridline" x1="'+L+'" x2="'+(W-R)+'" y1="'+y+'" y2="'+y+'"/>';
-    grid+='<text class="axislabel" x="'+(L-10)+'" y="'+(y+4)+'" text-anchor="end">'+compact(max*(1-i/4))+'</text>';
+    const tick=high-(high-low)*i/4;
+    grid+='<text class="axislabel" x="'+(L-10)+'" y="'+(y+4)+'" text-anchor="end">'+(tick<0?'−'+compact(-tick):compact(tick))+'</text>';
   }
   const last=coords[coords.length-1];
-  svg.innerHTML=grid+'<path class="chart-area" d="'+path(coords)+' L'+last.x+','+(T+ph)+' L'+L+','+(T+ph)+' Z"/><path class="chart-line-secondary" d="'+path(ghost)+'"/><path class="chart-line" d="'+path(coords)+'"/><line id="focusGuide" class="focus-guide" x1="0" x2="0" y1="'+T+'" y2="'+(T+ph)+'" style="display:none"/><circle id="focusDot" class="focus-dot" cx="0" cy="0" r="5" style="display:none"/><rect id="chartHit" x="'+L+'" y="'+T+'" width="'+pw+'" height="'+ph+'" fill="transparent"/>';
+  const baselineY=mapY(0);
+  svg.innerHTML=grid+'<line class="gridline" x1="'+L+'" x2="'+(W-R)+'" y1="'+baselineY+'" y2="'+baselineY+'"/><path class="chart-area" d="'+path(coords)+' L'+last.x+','+baselineY+' L'+L+','+baselineY+' Z"/><path class="chart-line-secondary" d="'+path(ghost)+'"/><path class="chart-line" d="'+path(coords)+'"/><line id="focusGuide" class="focus-guide" x1="0" x2="0" y1="'+T+'" y2="'+(T+ph)+'" style="display:none"/><circle id="focusDot" class="focus-dot" cx="0" cy="0" r="5" style="display:none"/><rect id="chartHit" x="'+L+'" y="'+T+'" width="'+pw+'" height="'+ph+'" fill="transparent"/>';
   $('chartLegend').textContent=chartMetric==='interest'?'Net monthly benefit':'After-tax account balance';
   $('chartSecondaryLegend').textContent=chartMetric==='interest'?'Gross monthly interest':'Balance without taxes';
   $('chartEndLabel').textContent='Month '+months.length;
