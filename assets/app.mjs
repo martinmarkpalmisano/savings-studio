@@ -1,13 +1,14 @@
 import { buildSchedule, DEFAULTS, parseLocalizedNumber } from './calc.mjs';
+import { buildDailySchedule, safeStartDate } from './daily.mjs';
 const $ = id => document.getElementById(id);
 const fields = ['initialBalance','monthlyDeposit','threshold','firstAER','excessAER','years','currency','taxRate','stampRate','monthlyFee'];
 const moneyFields = new Set(['initialBalance','monthlyDeposit','threshold','monthlyFee']);
 const parseInput = (field,value) => parseLocalizedNumber(value,moneyFields.has(field)?'money':'decimal');
 const displayInput = (field,value) => ['currency','years'].includes(field) ? String(value) : String(value).replace('.', ',');
-const aliases = {initialBalance:'start',monthlyDeposit:'deposit',threshold:'limit',firstAER:'rate1',excessAER:'rate2',tieredInterest:'tiered',years:'years',currency:'currency',taxRate:'tax',stampDuty:'stamp',stampRate:'stampRate',monthlyFeeEnabled:'monthlyFeeEnabled',monthlyFee:'monthlyFee'};
+const aliases = {initialBalance:'start',monthlyDeposit:'deposit',threshold:'limit',firstAER:'rate1',excessAER:'rate2',tieredInterest:'tiered',years:'years',currency:'currency',taxRate:'tax',stampDuty:'stamp',stampRate:'stampRate',monthlyFeeEnabled:'monthlyFeeEnabled',monthlyFee:'monthlyFee',creditFrequency:'frequency',startDate:'date'};
 const settingKey = 'savings-studio-settings-v1';
 const themeKey = 'savings-studio-theme-v1';
-let settings = {...DEFAULTS}, projection, selectedYear = '1', chartMetric = 'interest', toastTimer;
+let settings = {...DEFAULTS}, projection, selectedYear = '1', selectedDailyPeriod = '1', chartMetric = 'interest', toastTimer;
 function money(number, decimals = 2) {
   return new Intl.NumberFormat(settings.currency === 'EUR' ? 'it-IT':'en-GB', {
     style:'currency',currency:settings.currency,
@@ -20,6 +21,13 @@ function compact(n) {
 }
 function percent(n){return Number(n).toLocaleString('en-GB',{maximumFractionDigits:2})+'%';}
 function signedMoney(n){return (n>=0?'+':'−')+money(Math.abs(n));}
+function detailedMoney(n){return new Intl.NumberFormat(settings.currency==='EUR'?'it-IT':'en-GB',{
+  minimumFractionDigits:4,maximumFractionDigits:4
+}).format(n); }
+function localDateISO(){
+  const d=new Date();
+  return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);
+}
 function toast(t){
   $('toast').textContent=t;
   $('toast').classList.add('show');
@@ -29,6 +37,7 @@ function toast(t){
 function load(){
   try {
     const s = JSON.parse(localStorage.getItem(settingKey)||'{}');
+    if(!s.startDate)settings.startDate=localDateISO();
     if(s && typeof s === 'object') {
       settings = {...settings,...s};
       if(!Object.prototype.hasOwnProperty.call(s,'taxRate') && s.currency==='GBP') settings.currency='EUR';
@@ -36,7 +45,7 @@ function load(){
   } catch(e){}
   const params = new URLSearchParams(location.search);
   for(const [field,key] of Object.entries(aliases)){
-    if(params.has(key)) settings[field] = field==='currency' ? params.get(key) : ['stampDuty','tieredInterest','monthlyFeeEnabled'].includes(field) ? ['true','1'].includes(params.get(key)) : parseInput(field,params.get(key));
+    if(params.has(key)) settings[field] = ['currency','creditFrequency','startDate'].includes(field) ? params.get(key) : ['stampDuty','tieredInterest','monthlyFeeEnabled'].includes(field) ? ['true','1'].includes(params.get(key)) : parseInput(field,params.get(key));
   }
 }
 function inputs(){
@@ -46,10 +55,23 @@ function inputs(){
   $('stampRateContainer').hidden=!settings.stampDuty;
   $('monthlyFeeEnabled').checked=settings.monthlyFeeEnabled;
   $('monthlyFeeContainer').hidden=!settings.monthlyFeeEnabled;
+  $('creditFrequency').value=settings.creditFrequency;
+  $('startDate').value=safeStartDate(settings.startDate);
 }
 function render(){
-  projection = buildSchedule(settings);
+  projection = settings.creditFrequency==='daily' ? buildDailySchedule(settings) : buildSchedule(settings);
   settings = projection.settings;
+  const daily=settings.creditFrequency==='daily';
+  $('creditFrequency').value=settings.creditFrequency;
+  $('startDateControl').hidden=!daily;
+  $('startDate').value=safeStartDate(settings.startDate);
+  $('dailyStatementSection').hidden=!daily;
+  $('rateTypeLabel').textContent=daily?'GROSS P.A.':'AER / YEAR';
+  $('firstRateLabel').textContent=daily?'Annual interest rate (gross p.a.)':'Annual Equivalent Rate (AER)';
+  $('excessRateLabel').textContent=daily?'Annual interest rate (gross p.a.)':'Annual Equivalent Rate (AER)';
+  $('frequencyDescription').textContent=daily
+    ? 'Daily accrual at gross p.a. / 365 or 366, minus tax. Fractional cents carry over until €0.01 can be credited.'
+    : 'Monthly effective interest, using the quoted AER.';
   $('yearsValue').textContent=settings.years;
   $('monthlyFeeEnabled').checked=settings.monthlyFeeEnabled;
   $('monthlyFeeContainer').hidden=!settings.monthlyFeeEnabled;
@@ -104,6 +126,7 @@ function render(){
   $('yearFilter').innerHTML=options;
   $('yearFilter').value=selectedYear;
   table();
+  dailyTable();
   chart();
   try{localStorage.setItem(settingKey,JSON.stringify(settings));}catch(e){}
 }
@@ -111,6 +134,32 @@ function table(){
   const rows=selectedYear==='all'?projection.months:projection.months.filter(m=>m.year===Number(selectedYear));
   $('statementRows').innerHTML=rows.map(m=>'<tr><td>'+String(m.index).padStart(2,'0')+'</td><td>'+money(m.openingBalance)+'</td><td>'+money(m.firstInterest)+'</td><td>'+money(m.excessInterest)+'</td><td>'+money(m.interest)+'</td><td class="tax-amount">−'+money(m.tax)+'</td><td class="interest">+'+money(m.netInterest)+'</td><td>'+money(m.deposit)+'</td><td class="tax-amount">'+(m.stampDuty?'−'+money(m.stampDuty):'—')+'</td><td class="tax-amount">'+(m.monthlyFee?'−'+money(m.monthlyFee):'—')+'</td><td class="interest">'+signedMoney(m.netMonthlyBenefit)+'</td><td>'+money(m.closingBalance)+'</td></tr>').join('');
   $('tableCount').textContent='Showing '+rows.length+' of '+projection.months.length+' months';
+}
+function dailyTable(){
+  const section=$('dailyStatementSection');
+  if(settings.creditFrequency!=='daily'){
+    section.hidden=true;
+    return;
+  }
+  section.hidden=false;
+  const options=projection.months.map(m=>'<option value="'+m.index+'">Period '+m.index+' · '+m.startDate+' – '+m.endDate+'</option>').join('');
+  $('dailyPeriodFilter').innerHTML=options;
+  if(Number(selectedDailyPeriod)>projection.months.length)selectedDailyPeriod='1';
+  $('dailyPeriodFilter').value=selectedDailyPeriod;
+  drawDailyPeriod();
+}
+function drawDailyPeriod(){
+  if(settings.creditFrequency!=='daily')return;
+  const rows=projection.days.filter(d=>d.period===Number(selectedDailyPeriod));
+  $('dailyStatementRows').innerHTML=rows.map(m=>
+    '<tr><td>'+m.date+'</td><td>'+money(m.openingBalance)+'</td>'
+    +'<td>'+detailedMoney(m.interest)+'</td><td class="tax-amount">−'+detailedMoney(m.tax)+'</td>'
+    +'<td class="interest">+'+money(m.netInterest)+'</td><td>'+money(m.deposit)+'</td>'
+    +'<td class="tax-amount">'+(m.stampDuty?'−'+money(m.stampDuty):'—')+'</td>'
+    +'<td class="tax-amount">'+(m.monthlyFee?'−'+money(m.monthlyFee):'—')+'</td>'
+    +'<td>'+money(m.closingBalance)+'</td></tr>'
+  ).join('');
+  $('dailyTableCount').textContent=rows.length+' days shown · '+projection.days.length+' days projected';
 }
 function chart(){
   const svg=$('growthChart'), months=projection.months;
@@ -164,6 +213,17 @@ function chart(){
   $('chartHit').addEventListener('pointerdown',pointer);
   svg.onpointerleave=()=>{tooltip.hidden=true;$('focusGuide').style.display='none';$('focusDot').style.display='none';};
 }
+function exportDailyCSV(){
+  if(settings.creditFrequency!=='daily'){toast('Select Daily interest first.');return;}
+  const header=['Date','Payment period','Opening balance','First tier gross accrued','Excess tier gross accrued','Total gross accrued','Tax accrued (estimated)','Net credited','Additional contribution','Stamp duty','External plan fee','Net daily economic benefit','Closing savings balance','Cumulative net interest','Cumulative stamp duty','Cumulative plan fees'];
+  const columns=m=>[m.date,m.period,m.openingBalance,m.firstInterest,m.excessInterest,m.interest,m.tax,m.netInterest,m.deposit,m.stampDuty,m.monthlyFee,m.netDailyBenefit,m.closingBalance,m.totalNetInterest,m.totalStampDuty,m.totalMonthlyFees];
+  const values=projection.days.map(d=>columns(d).map((v,i)=>i===0?String(v):i===1?String(v):Number(v).toFixed(i===3||i===4||i===5||i===6?6:2)).join(','));
+  const blob=new Blob(['\uFEFF'+[header.join(','),...values].join('\r\n')],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='savings-studio-daily-projection.csv';
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
+  toast('Full daily statement exported.');
+}
 function exportCSV(){
   const header=['Month','Year','Opening balance','First-tier gross interest','Excess-tier gross interest','Gross interest','Tax withheld','Net interest credited','Additional contribution','Stamp duty','Plan fee (paid externally)','Net monthly benefit','Closing account balance','Cumulative tax','Cumulative stamp duty','Cumulative plan fees','Cumulative net interest'];
   const data=projection.months.map(m=>[m.index,m.year,m.openingBalance,m.firstInterest,m.excessInterest,m.interest,m.tax,m.netInterest,m.deposit,m.stampDuty,m.monthlyFee,m.netMonthlyBenefit,m.closingBalance,m.totalTax,m.totalStampDuty,m.totalMonthlyFees,m.totalNetInterest].map((n,i)=>i<2?String(n):Number(n).toFixed(2)).join(','));
@@ -211,12 +271,16 @@ function init(){
   $('monthlyFeeEnabled').addEventListener('change',e=>{settings.monthlyFeeEnabled=e.target.checked;render();});
   $('tieredInterest').addEventListener('change',e=>{settings.tieredInterest=e.target.checked;render();});
   $('yearFilter').addEventListener('change',e=>{selectedYear=e.target.value;table();});
+  $('creditFrequency').addEventListener('change',e=>{settings.creditFrequency=e.target.value;render();});
+  $('startDate').addEventListener('change',e=>{settings.startDate=safeStartDate(e.target.value);selectedDailyPeriod='1';render();});
+  $('dailyPeriodFilter').addEventListener('change',e=>{selectedDailyPeriod=e.target.value;drawDailyPeriod();});
+  $('exportDailyBtn').addEventListener('click',exportDailyCSV);
   $('interestChartBtn').addEventListener('click',()=>{chartMetric='interest';chart();});
   $('balanceChartBtn').addEventListener('click',()=>{chartMetric='balance';chart();});
   $('exportBtn').addEventListener('click',exportCSV);
   $('copyLinkBtn').addEventListener('click',share);
   $('resetBtn').addEventListener('click',()=>{
-    settings={...DEFAULTS};selectedYear='1';inputs();render();toast('Calculator reset.');
+    settings={...DEFAULTS,startDate:localDateISO()};selectedYear='1';selectedDailyPeriod='1';inputs();render();toast('Calculator reset.');
   });
   $('themeToggle').addEventListener('click',()=>{
     const theme=document.documentElement.dataset.theme==='light'?'dark':'light';
