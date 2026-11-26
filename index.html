@@ -34,8 +34,8 @@
   <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="./assets/icon-192.png" />
   <link rel="manifest" href="./manifest.webmanifest" />
-  <link rel="stylesheet" href="./assets/styles.css" />
-  <script src="./assets/app.mjs" type="module"></script>
+  <link rel="stylesheet" href="./assets/styles.css?v=11" />
+  <script src="./assets/app.mjs?v=11" type="module"></script>
 </head>
 <body>
   <div class="shell">
@@ -145,7 +145,11 @@
             <div class="hero-top"><span class="eyebrow">02 / YOUR PROJECTION</span><span class="forecast-tag"><span class="status-dot"></span> LIVE FORECAST</span></div>
             <div class="hero-label">Projected account balance</div>
             <div id="endingBalance" class="hero-balance">€20.000,00</div>
-            <div class="hero-note"><span id="totalInterest" class="positive">+£0.00</span> <span>profit after taxes and optional plan fees over <strong id="durationLabel">5 years</strong></span></div>
+            <div class="hero-blended" aria-label="Gross blended interest rate at the starting balance">
+              <div><span class="hero-blended-label">BLENDED GROSS RATE · STARTING BALANCE</span><strong id="heroBlendedRate">—</strong></div>
+              <span class="hero-blended-note">Balance-weighted across your interest tiers · before tax</span>
+            </div>
+            <div class="hero-note"><span id="totalInterest" class="positive">+€0,00</span> <span>profit after taxes and optional plan fees over <strong id="durationLabel">5 years</strong></span></div>
             <div class="hero-bottom"><div><small>YOUR CONTRIBUTIONS</small><strong id="totalContributions">—</strong></div><span class="hero-plus">+</span><div><small>ACCOUNT GROWTH</small><strong id="heroInterest">—</strong></div><span class="hero-equals">=</span><div><small>FINAL BALANCE</small><strong id="heroFinal">—</strong></div></div>
           </section>
 
@@ -260,7 +264,7 @@
 
             <details class="explain-panel"><summary>How is interest calculated? <span>+</span></summary><div><p>Monthly mode treats inputs as AER and uses <code>(1 + AER / 100)^(1/12) − 1</code>. Daily mode treats the inputs as gross annual p.a. rates, calculates daily accrued interest using the actual calendar year (365/366 days), withholds 26% by default and carries fractional net cents until €0.01 can be credited. These are different rate conventions; the same number may produce different annual results.</p><p>Gross interest is rounded to cents for each tier. The configured Italian withholding tax (default 26%) is deducted when interest is credited. Only net interest compounds; any monthly top-up is added at month-end.</p><p>If enabled, annual stamp duty is estimated at the selected rate (default 0.20%) on the year-end balance, with a €1 minimum, and deducted every 12 months. Actual bank charges depend on statement timing and product terms. This is an illustrative estimate, not a tax determination.</p><p>When the optional monthly plan fee is enabled, it is assumed to be paid outside the savings account. The account balance and future interest are therefore unchanged, but total profit and monthly net benefit are reduced by each subscription payment.</p><p>This is an illustrative forecast, not a bank statement. Bank payment dates, taxes rounded to cents, rate conventions, promotional periods, and fees may differ from this projection. Switching currencies changes the symbol, not the numeric amounts.</p></div></details>
     </main>
-    <footer class="site-footer"><span>✦ Savings Studio</span><span>Made for clarity. No sign-in · No tracking · No uploaded data.</span></footer>
+    <footer class="site-footer"><span>✦ Savings Studio · v11</span><span>Made for clarity. No sign-in · No tracking · No uploaded data.</span></footer>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </body>
