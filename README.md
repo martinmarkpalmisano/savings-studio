@@ -1,6 +1,16 @@
-# Savings Studio — tiered savings calculator
+# Savings Studio — flexible savings and fixed-term deposit calculator
 
 A responsive, no-backend savings calculator that works on GitHub Pages and can be added to a phone's home screen. All calculations run on the device; nothing is uploaded.
+
+## Fixed-term deposit mode
+
+Select **Account type → Fixed-term deposit** to calculate non-compounding returns from a locked bank deposit (nominal gross annual rate × locked principal × term in years). Choose a 6–60 month term and payout timing: monthly, quarterly, annual or maturity-only. Coupons are credited **outside** the deposit; unlike flexible savings, they do not earn further interest in this projection.
+
+The **Load Cherry Vincolato example** preset fills €60,000 principal, 4.20% gross annual rate, 48 months, quarterly coupons, 26% withholding and optional 0.20% yearly stamp duty. With duty **off**, the illustrative results are €10,080 gross interest, €2,620.80 interest tax, €7,459.20 net coupons, and €67,459.20 combined original principal plus coupons at maturity. With estimated duty **on**, €480 is deducted from the combined economic result, making it €66,979.20, or about **2.908% simple annualised return** after tax and duty.
+
+The locked principal remains at €60,000 throughout. Interest shown at maturity represents both deposit principal and the net coupon cash you have separately received. Real bank products can use different day-count methods, payout dates, rounding, early-withdrawal penalties, and stamp-duty rules. This is not a forecast of reinvestment returns and is not affiliated with Cherry Bank.
+
+Savings Studio retains your flexible-savings and fixed-term settings separately when switching modes. Fixed deposits have their own monthly coupon statement and CSV export.
 
 ## Features
 
@@ -89,6 +99,7 @@ This is an illustrative model, not an exact prediction of a specific bank's stat
 - `assets/styles.css` — mobile-responsive styling
 - `assets/app.mjs` — UI, monthly charts and the daily/monthly statement views
 - `assets/daily.mjs` — real-date daily interest model
+- `assets/fixed.mjs` — locked-principal, non-compounding fixed-deposit coupon model
 - `assets/calc.mjs` — calculation logic (also used in tests)
 - `assets/favicon.svg`, `assets/icon-192.png`, `assets/icon-512.png` — site and home-screen icons
 - `manifest.webmanifest`, `sw.js` — home-screen support and offline cache
