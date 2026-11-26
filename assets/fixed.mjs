@@ -1,4 +1,4 @@
-import {normalizeSettings,roundMoney} from './calc.mjs?v=13';
+import {normalizeSettings,roundMoney} from './calc.mjs?v=14';
 
 /**
  * Generic nominal-rate, non-compounding fixed-term bank deposit projection.
