@@ -35,8 +35,8 @@ td.tax-amount{color:var(--amber)}
 .tier-mode-control small{line-height:1.45}
 .threshold-control[hidden],#excessTierCard[hidden]{display:none!important}
 body[data-rate-mode="single"] .breakdown-panel{display:none}
-body[data-rate-mode="single"] .statement-panel th:nth-child(4),
-body[data-rate-mode="single"] .statement-panel td:nth-child(4){display:none}
+body[data-rate-mode="single"] .statement-panel:not(#dailyStatementSection) th:nth-child(5),
+body[data-rate-mode="single"] .statement-panel:not(#dailyStatementSection) td:nth-child(5){display:none}
 
 /* Optional monthly plan subscription: external expense, not a savings withdrawal */
 #monthlyFeeContainer[hidden]{display:none!important}
@@ -62,3 +62,17 @@ body[data-rate-mode="single"] .statement-panel td:nth-child(4){display:none}
 .seo-guide-grid p{margin:0 0 9px}
 .seo-guide .guide-disclaimer{font-size:11px;color:var(--muted-2);border-top:1px solid var(--line);padding-top:15px}
 @media(max-width:650px){.seo-guide{padding:20px 19px}.seo-guide-grid{grid-template-columns:1fr;gap:3px}.seo-guide-body{font-size:12px}}
+
+/* Gross blended annual rate — one rate reflecting the weight of each tier */
+.blended-panel{padding:21px 24px;margin-top:12px}
+.blended-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.blended-heading .eyebrow{display:block;color:var(--mint);letter-spacing:.13em;font-weight:800;font-size:10px}
+.blended-heading h2{color:var(--text);font-size:18px;font-weight:760;line-height:1.35;margin:5px 0}
+.blended-tag{border-radius:8px;border:1px solid var(--line);color:var(--muted);font-size:10px;letter-spacing:.08em;font-weight:750;padding:7px 9px}
+.blended-values{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:12px}
+.blended-values>div{background:var(--card-2);border:1px solid var(--line);border-radius:11px;padding:14px 15px;min-width:0}
+.blended-values span{display:block;color:var(--muted);font-size:11px;line-height:1.4;margin-bottom:5px}
+.blended-values strong{display:block;color:var(--mint);font-size:26px;font-weight:800;font-variant-numeric:tabular-nums}
+.blended-note{color:var(--muted);font-size:11px;line-height:1.65;margin:15px 0 0}
+td.blended-cell{font-weight:750;color:var(--mint);white-space:nowrap}
+@media(max-width:450px){.blended-panel{padding:18px}.blended-values{gap:9px}.blended-values>div{padding:12px 10px}.blended-values strong{font-size:22px}.blended-heading h2{font-size:16px}}
