@@ -8,6 +8,8 @@ const parseInput = (field,value) => parseLocalizedNumber(value,moneyFields.has(f
 const displayInput = (field,value) => ['currency','years'].includes(field) ? String(value) : String(value).replace('.', ',');
 const aliases = {initialBalance:'start',monthlyDeposit:'deposit',threshold:'limit',firstAER:'rate1',excessAER:'rate2',tieredInterest:'tiered',years:'years',currency:'currency',taxRate:'tax',stampDuty:'stamp',stampRate:'stampRate',monthlyFeeEnabled:'monthlyFeeEnabled',monthlyFee:'monthlyFee',creditFrequency:'frequency',startDate:'date',accountType:'type',fixedTermMonths:'term',fixedPayoutFrequency:'payout'};
 const settingKey = 'savings-studio-settings-v1';
+const draftKey = 'savings-studio-account-modes-v13';
+let accountDrafts={flexible:null,fixed:null};
 const themeKey = 'savings-studio-theme-v1';
 let settings = {...DEFAULTS}, projection, selectedYear = '1', selectedDailyPeriod = '1', chartMetric = 'interest', toastTimer;
 function money(number, decimals = 2) {
@@ -45,6 +47,13 @@ function toast(t){
   toastTimer=setTimeout(()=>$('toast').classList.remove('show'),2800);
 }
 function load(){
+  try{
+    const previous=JSON.parse(localStorage.getItem(draftKey)||'{}');
+    if(previous&&typeof previous==='object'){
+      accountDrafts.flexible=previous.flexible||null;
+      accountDrafts.fixed=previous.fixed||null;
+    }
+  }catch(e){}
   try {
     const s = JSON.parse(localStorage.getItem(settingKey)||'{}');
     if(!s.startDate)settings.startDate=localDateISO();
@@ -57,6 +66,7 @@ function load(){
   for(const [field,key] of Object.entries(aliases)){
     if(params.has(key)) settings[field] = ['currency','creditFrequency','startDate','accountType','fixedPayoutFrequency'].includes(field) ? params.get(key) : ['stampDuty','tieredInterest','monthlyFeeEnabled'].includes(field) ? ['true','1'].includes(params.get(key)) : parseInput(field,params.get(key));
   }
+  accountDrafts[settings.accountType==='fixed'?'fixed':'flexible']={...settings};
 }
 function inputs(){
   fields.forEach(k=>$(k).value=displayInput(k,settings[k]));
@@ -190,7 +200,11 @@ function render(){
   table();
   dailyTable();
   chart();
-  try{localStorage.setItem(settingKey,JSON.stringify(settings));}catch(e){}
+  accountDrafts[fixed?'fixed':'flexible']={...settings};
+  try{
+    localStorage.setItem(settingKey,JSON.stringify(settings));
+    localStorage.setItem(draftKey,JSON.stringify(accountDrafts));
+  }catch(e){}
 }
 function table(){
   const rows=selectedYear==='all'?projection.months:projection.months.filter(m=>m.year===Number(selectedYear));
@@ -361,9 +375,12 @@ function init(){
   $('tieredInterest').addEventListener('change',e=>{settings.tieredInterest=e.target.checked;render();});
   $('yearFilter').addEventListener('change',e=>{selectedYear=e.target.value;table();});
   $('accountType').addEventListener('change',e=>{
-    settings.accountType=e.target.value;
+    accountDrafts[settings.accountType==='fixed'?'fixed':'flexible']={...settings};
+    const target=e.target.value==='fixed'?'fixed':'flexible';
+    settings=accountDrafts[target]?{...accountDrafts[target]}:{...settings,accountType:target};
+    settings.accountType=target;
     selectedYear='1';selectedDailyPeriod='1';
-    render();
+    inputs();render();
   });
   $('fixedTermMonths').addEventListener('change',e=>{settings.fixedTermMonths=Number(e.target.value);render();});
   $('fixedPayoutFrequency').addEventListener('change',e=>{settings.fixedPayoutFrequency=e.target.value;render();});
@@ -383,7 +400,7 @@ function init(){
   $('exportBtn').addEventListener('click',exportCSV);
   $('copyLinkBtn').addEventListener('click',share);
   $('resetBtn').addEventListener('click',()=>{
-    settings={...DEFAULTS,startDate:localDateISO()};selectedYear='1';selectedDailyPeriod='1';inputs();render();toast('Calculator reset.');
+    accountDrafts={flexible:null,fixed:null};settings={...DEFAULTS,startDate:localDateISO()};selectedYear='1';selectedDailyPeriod='1';inputs();render();toast('Calculator reset.');
   });
   $('themeToggle').addEventListener('click',()=>{
     const theme=document.documentElement.dataset.theme==='light'?'dark':'light';
