@@ -1,4 +1,4 @@
-import { normalizeSettings, roundMoney, effectiveMonthlyRate, blendedGrossRate } from './calc.mjs?v=13';
+import { normalizeSettings, roundMoney, effectiveMonthlyRate, blendedGrossRate } from './calc.mjs?v=14';
 
 /**
  * Daily gross p.a. deposit interest, 365/366 actual-day basis.
