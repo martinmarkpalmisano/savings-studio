@@ -6,6 +6,7 @@ A responsive, no-backend savings calculator that works on GitHub Pages and can b
 
 - Switch **Use tiered interest** on or off. When off, the primary AER applies to the **entire balance**, and the threshold and second tier are hidden. Turn it back on to restore those saved values.
 - Two editable interest tiers (default: **3.50% AER for the first €15,000**, **1.25% AER on the excess**).
+- **Blended gross annual interest rate** automatically weighted by the amounts in each tier, with start/end figures and a rate column in the monthly and daily statements and CSV exports. Example: €59,514.16 at 3.50% on €15,000 and 1.00% on the excess produces about **1.63% gross p.a.** The rate changes as the account balance grows.
 - Italian tax estimate: default **26% interest withholding** at each monthly credit (editable). Net interest remains in the account and compounds.
 - Optional **0.20% annual deposit-account stamp duty** can be enabled and edited.
 - Optional **monthly account-plan fee** (default **€9.99**, adjustable). A switch includes/excludes the fee each month.
