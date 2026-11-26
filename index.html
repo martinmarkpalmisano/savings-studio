@@ -61,16 +61,28 @@
         <aside class="panel controls-panel">
           <div class="panel-top"><div><span class="eyebrow">01 / CONFIGURE</span><h2>Your account</h2></div><button id="resetBtn" type="button" class="text-btn">↺ Reset</button></div>
           <div class="control-group">
+            <label for="accountType">Account type</label>
+            <select id="accountType">
+              <option value="flexible">Flexible savings · interest compounds</option>
+              <option value="fixed">Fixed-term deposit · simple interest</option>
+            </select>
+            <span class="helper" id="accountTypeNote">Interest stays in savings and compounds automatically.</span>
+          </div>
+          <div class="fixed-controls" id="fixedPresetPanel" hidden>
+            <button type="button" class="action-button secondary fixed-preset-button" id="cherryPresetBtn">Load Cherry Vincolato example · €60,000 / 4.20% / 48 months</button>
+            <span class="helper">Illustrative scenario, not an offer. Check Cherry's latest terms before opening an account.</span>
+          </div>
+          <div class="control-group">
             <label for="initialBalance">Starting balance <span class="hint" title="Money already in your savings account">ⓘ</span></label>
             <div class="input-money"><span data-symbol>€</span><input id="initialBalance" type="text" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false" min="0" step="0.01" value="20000" /></div>
           </div>
-          <div class="control-group">
+          <div class="control-group flexible-controls">
             <label for="monthlyDeposit">Additional monthly deposit</label>
             <div class="input-money"><span data-symbol>€</span><input id="monthlyDeposit" type="text" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false" min="0" step="0.01" value="0" /></div>
             <span class="helper">Added at the end of each month. Interest is never withdrawn.</span>
           </div>
-          <div class="tier-head"><span id="interestRateHeading">INTEREST TIERS</span><span class="tier-sub" id="rateTypeLabel">GROSS P.A.</span></div>
-          <div class="control-group">
+          <div class="tier-head flexible-controls"><span id="interestRateHeading">INTEREST TIERS</span><span class="tier-sub" id="rateTypeLabel">GROSS P.A.</span></div>
+          <div class="control-group flexible-controls">
             <label for="creditFrequency">Interest payment frequency</label>
             <select id="creditFrequency" aria-describedby="frequencyDescription">
               <option value="daily">Daily (Revolut Italy)</option>
@@ -78,12 +90,12 @@
             </select>
             <span class="helper" id="frequencyDescription">Daily mode uses the gross annual rate divided by 365, or 366 in leap years, and credits amounts of at least €0.01.</span>
           </div>
-          <div class="control-group" id="startDateControl">
+          <div class="control-group flexible-controls" id="startDateControl">
             <label for="startDate">Projection start date</label>
             <input id="startDate" type="date" value="2026-11-22" />
             <span class="helper">Used for actual calendar days, leap years and your dated daily statement.</span>
           </div>
-          <label class="check-line tier-mode-control" for="tieredInterest">
+          <label class="check-line tier-mode-control flexible-controls" for="tieredInterest">
             <input type="checkbox" id="tieredInterest" checked aria-describedby="tierModeDescription" />
             <span><strong>Use tiered interest</strong><small id="tierModeDescription">Different rates above and below a balance threshold.</small></span>
           </label>
@@ -91,29 +103,51 @@
             <div class="tier-title"><span class="tier-dot"></span> <span id="firstTierTitle">Tier 1</span> <span class="tier-badge" id="firstTierBadge">UP TO LIMIT</span></div>
             <label for="firstAER" id="firstRateLabel">Annual interest rate (gross p.a.)</label>
             <div class="input-suffix"><input id="firstAER" type="text" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false" min="0" max="100" step="0.01" value="3.5" /><span>%</span></div>
-            <div class="threshold-control" id="thresholdControl">
+            <div class="threshold-control flexible-controls" id="thresholdControl">
               <label for="threshold">Balance threshold</label>
               <div class="input-money"><span data-symbol>€</span><input id="threshold" type="text" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false" min="0" step="0.01" value="15000" /></div>
             </div>
           </div>
-          <div class="tier-card tier-card-second" id="excessTierCard">
+          <div class="tier-card tier-card-second flexible-controls" id="excessTierCard">
             <div class="tier-title"><span class="tier-dot"></span> Tier 2 <span class="tier-badge">AMOUNT ABOVE LIMIT</span></div>
             <label for="excessAER" id="excessRateLabel">Annual interest rate (gross p.a.)</label>
             <div class="input-suffix"><input id="excessAER" type="text" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false" min="0" max="100" step="0.01" value="1.25" /><span>%</span></div>
           </div>
 
+          <div class="fixed-controls fixed-terms" id="fixedTermsPanel" hidden>
+            <div class="tier-head"><span>FIXED DEPOSIT TERMS</span><span class="tier-sub">SIMPLE INTEREST</span></div>
+            <div class="control-group">
+              <label for="fixedTermMonths">Lock-up duration</label>
+              <select id="fixedTermMonths">
+                <option value="6">6 months</option><option value="12">12 months</option>
+                <option value="18">18 months</option><option value="24">24 months</option>
+                <option value="36">36 months</option><option value="48">48 months</option>
+                <option value="60">60 months</option>
+              </select>
+            </div>
+            <div class="control-group">
+              <label for="fixedPayoutFrequency">Interest payout schedule</label>
+              <select id="fixedPayoutFrequency">
+                <option value="quarterly">Quarterly coupons (Cherry Vincolato)</option>
+                <option value="monthly">Monthly</option>
+                <option value="annual">Annually</option>
+                <option value="maturity">At maturity</option>
+              </select>
+              <span class="helper">Payouts are paid outside the locked principal and do not compound. The maturity date is an estimate based on the chosen term.</span>
+            </div>
+          </div>
           <div class="tier-head"><span>ITALIAN TAXES</span><span class="tier-sub">EDITABLE</span></div>
           <div class="tax-settings">
             <div class="control-group">
               <label for="taxRate">Tax on interest (ritenuta fiscale)</label>
               <div class="input-suffix"><input id="taxRate" type="text" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false" min="0" max="100" step="0.01" value="26" /><span>%</span></div>
-              <span class="helper">Default 26% withholding at monthly interest credit. Only net interest compounds.</span>
+              <span class="helper" id="taxTimingNote">Default 26% withholding on credited interest. Only net interest compounds for flexible savings.</span>
             </div>
             <label class="check-line" for="stampDuty"><input type="checkbox" id="stampDuty" /><span><strong>Include stamp duty</strong><small>Optional annual bollo for a conto deposito.</small></span></label>
             <div class="control-group" id="stampRateContainer" hidden>
               <label for="stampRate">Annual stamp duty rate</label>
               <div class="input-suffix"><input id="stampRate" type="text" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false" min="0" max="100" step="0.01" value="0.2" /><span>%</span></div>
-              <span class="helper">Simplified annual estimate based on year-end balance, not exact bank statement dates.</span>
+              <span class="helper" id="stampTimingNote">Simplified annual estimate. Bank statement timing and conditions may differ.</span>
             </div>
           </div>
           <div class="tier-head"><span>MONTHLY ACCOUNT COST</span><span class="tier-sub">OPTIONAL</span></div>
@@ -128,7 +162,7 @@
               <span class="helper">Assumed paid from a separate account each month. It reduces your overall profit, not the savings balance or compounding.</span>
             </div>
           </div>
-          <div class="control-group duration-group">
+          <div class="control-group duration-group flexible-controls">
             <div class="label-row"><label for="years">Projection length</label><strong><span id="yearsValue">5</span> years</strong></div>
             <input id="years" type="range" min="1" max="30" step="1" value="5" />
             <div class="range-ends"><span>1 year</span><span>30 years</span></div>
@@ -137,11 +171,24 @@
             <label for="currency">Display currency <span class="hint" title="Changes symbols only; no foreign exchange conversion">ⓘ</span></label>
             <select id="currency"><option value="EUR">€ EUR · Euro</option><option value="GBP">£ GBP · British pound</option><option value="USD">$ USD · US dollar</option></select>
           </div>
-          <div class="sidebar-footer"><span class="sidebar-footer-icon">✦</span> After-tax interest is reinvested monthly. Rates are assumed constant.</div>
+          <div class="sidebar-footer"><span class="sidebar-footer-icon">✦</span> <span id="sidebarFooterText">After-tax interest is reinvested according to your selected payment frequency. Rates are assumed constant.</span></div>
         </aside>
 
         <div class="results">
-          <section class="hero-card" aria-live="polite">
+          <section class="hero-card fixed-summary" id="fixedSummarySection" hidden aria-live="polite">
+            <div class="hero-top"><span class="eyebrow">02 / FIXED-TERM DEPOSIT</span><span class="forecast-tag">SIMPLE INTEREST</span></div>
+            <div class="hero-label">Total wealth at maturity · after selected taxes &amp; fees</div>
+            <div id="fixedFinalWealth" class="hero-balance">—</div>
+            <div class="hero-note">Locked principal <strong id="fixedPrincipal">—</strong> + net interest and costs <strong id="fixedNetGain">—</strong></div>
+            <div class="fixed-stat-grid">
+              <div><small>GROSS ANNUAL RATE</small><strong id="fixedGrossRate">—</strong></div>
+              <div><small>NET RATE AFTER 26% TAX</small><strong id="fixedTaxNetRate">—</strong></div>
+              <div><small>NET ANNUALISED RETURN AFTER ALL SELECTED COSTS</small><strong id="fixedEffectiveRate">—</strong></div>
+              <div><small>INTEREST PAYOUT</small><strong id="fixedPayoutLabel">—</strong></div>
+            </div>
+            <p class="fixed-disclaimer">Interest coupons are received outside the locked deposit; they are not automatically reinvested. Final wealth includes those net coupons, while the bank account principal stays unchanged.</p>
+          </section>
+          <section class="hero-card flexible-results" aria-live="polite">
             <div class="hero-top"><span class="eyebrow">02 / YOUR PROJECTION</span><span class="forecast-tag"><span class="status-dot"></span> LIVE FORECAST</span></div>
             <div class="hero-label">Projected account balance</div>
             <div id="endingBalance" class="hero-balance">€20.000,00</div>
@@ -153,12 +200,12 @@
             <div class="hero-bottom"><div><small>YOUR CONTRIBUTIONS</small><strong id="totalContributions">—</strong></div><span class="hero-plus">+</span><div><small>ACCOUNT GROWTH</small><strong id="heroInterest">—</strong></div><span class="hero-equals">=</span><div><small>FINAL BALANCE</small><strong id="heroFinal">—</strong></div></div>
           </section>
 
-          <section class="metrics" aria-label="Interest highlights">
+          <section class="metrics flexible-results" aria-label="Interest highlights">
             <div class="mini-card"><div class="mini-head"><span>MONTH 01</span><span class="mini-icon green">↗</span></div><div class="mini-label">First month — net interest</div><strong id="firstMonthInterest">—</strong><small>Credited to your account</small></div>
             <div class="mini-card"><div class="mini-head"><span id="lastMonthLabel">MONTH 60</span><span class="mini-icon gold">◷</span></div><div class="mini-label">Last month — net interest</div><strong id="lastMonthInterest">—</strong><small>Includes compound growth</small></div>
           </section>
 
-          <section class="panel blended-panel" aria-labelledby="blendedHeading">
+          <section class="panel blended-panel flexible-results" aria-labelledby="blendedHeading">
             <div class="blended-heading">
               <div><span class="eyebrow">BLENDED INTEREST RATE</span><h2 id="blendedHeading">Your blended gross rate</h2></div>
               <span class="blended-tag">GROSS · BEFORE TAX</span>
@@ -177,7 +224,7 @@
             <div class="chart-footer"><span>Month 1</span><span id="chartEndLabel">Month 60</span></div>
           </section>
 
-          <section class="panel breakdown-panel">
+          <section class="panel breakdown-panel flexible-results">
             <div class="panel-heading"><div><span class="eyebrow">04 / RATE BREAKDOWN</span><h2>Where interest comes from</h2></div></div>
             <div class="breakdown-grid"><div><span class="breakdown-label"><i class="tier-dot tier-dot-large"></i> First tier</span><strong id="firstTierTotal">—</strong><small id="firstTierCaption">3.50% on first €15,000</small></div><div><span class="breakdown-label"><i class="tier-dot gold-dot tier-dot-large"></i> Excess tier</span><strong id="secondTierTotal">—</strong><small id="secondTierCaption">1.25% above €15,000</small></div></div>
             <div class="tier-track"><span id="tierTrackFirst"></span><span id="tierTrackSecond"></span></div>
@@ -189,21 +236,21 @@
             <div class="tax-metrics">
               <div><span>Gross interest earned</span><strong id="taxGrossInterest">—</strong></div>
               <div><span>Interest tax withheld</span><strong id="taxWithheld" class="negative">—</strong></div>
-              <div><span>Net interest credited</span><strong id="taxNetInterest" class="positive-text">—</strong></div>
+              <div><span id="interestCreditLabel">Net interest credited</span><strong id="taxNetInterest" class="positive-text">—</strong></div>
               <div><span>Estimated stamp duty</span><strong id="taxStamp" class="negative">—</strong></div>
               <div><span>Monthly plan fees (total)</span><strong id="planFeesTotal" class="negative">—</strong></div>
             </div>
             <div class="tax-total"><span>Net profit after all selected costs</span><strong id="taxNetProfit">—</strong></div>
-            <div class="gross-comparison"><span>Equivalent final value after external plan fees</span><strong id="effectiveFinalValue">—</strong></div>
-            <div class="gross-comparison"><span>Hypothetical ending balance without tax</span><strong id="grossFinal">—</strong></div>
+            <div class="gross-comparison"><span id="effectiveValueLabel">Equivalent final value after external plan fees</span><strong id="effectiveFinalValue">—</strong></div>
+            <div class="gross-comparison"><span id="grossFinalLabel">Hypothetical ending balance without tax</span><strong id="grossFinal">—</strong></div>
             <p class="cross-note" id="taxSummaryNote">—</p><p class="cross-note" id="monthlyFeeNote">Subscription fees are paid separately and do not lower the savings balance.</p>
           </section>
         </div>
       </div>
 
       <section class="panel statement-panel">
-        <div class="statement-head"><div><span class="eyebrow">06 / EVERY PAYMENT</span><h2>Month-by-month statement</h2><p>See your opening blended rate alongside gross interest, tax, net credited interest, stamp duty and subscription costs.</p></div><div class="statement-actions"><select id="yearFilter" aria-label="Filter statement by year"><option value="1">Year 1</option></select><button class="action-button secondary" type="button" id="exportBtn">↓ Export CSV</button></div></div>
-        <div class="table-scroll"><table><thead><tr><th scope="col">MONTH</th><th scope="col">OPENING BALANCE</th><th scope="col">BLENDED RATE</th><th scope="col" id="statementRateColumn">FIRST TIER</th><th scope="col">EXCESS TIER</th><th scope="col">GROSS INTEREST</th><th scope="col">WITHHOLDING</th><th scope="col">NET CREDITED</th><th scope="col">DEPOSIT</th><th scope="col">STAMP DUTY</th><th scope="col">PLAN FEE</th><th scope="col">NET BENEFIT</th><th scope="col">CLOSING BALANCE</th></tr></thead><tbody id="statementRows"></tbody></table></div>
+        <div class="statement-head"><div><span class="eyebrow">06 / EVERY PAYMENT</span><h2 id="monthlyStatementTitle">Month-by-month statement</h2><p id="monthlyStatementDescription">See your opening blended rate alongside gross interest, tax, net credited interest, stamp duty and subscription costs.</p></div><div class="statement-actions"><select id="yearFilter" aria-label="Filter statement by year"><option value="1">Year 1</option></select><button class="action-button secondary" type="button" id="exportBtn">↓ Export CSV</button></div></div>
+        <div class="table-scroll"><table><thead><tr><th scope="col">MONTH</th><th scope="col">OPENING BALANCE</th><th scope="col" class="flexible-column">BLENDED RATE</th><th scope="col" class="flexible-column" id="statementRateColumn">FIRST TIER</th><th scope="col" class="flexible-column">EXCESS TIER</th><th scope="col" id="grossInterestHeader">GROSS INTEREST</th><th scope="col" class="fixed-column">GROSS COUPON PAID</th><th scope="col">WITHHOLDING</th><th scope="col">NET CREDITED</th><th scope="col">DEPOSIT</th><th scope="col">STAMP DUTY</th><th scope="col">PLAN FEE</th><th scope="col">NET BENEFIT</th><th scope="col" id="statementClosingHeader">CLOSING BALANCE</th></tr></thead><tbody id="statementRows"></tbody></table></div>
         <div class="statement-footer"><span id="tableCount">—</span><button class="text-btn" type="button" id="copyLinkBtn">↗ Share your settings</button></div>
       </section>
 
