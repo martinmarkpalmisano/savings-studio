@@ -62,3 +62,20 @@ test('calendar date validation is predictable',()=>{
   assert.equal(safeStartDate('2027-02-29'),'2026-11-22');
   assert.equal(safeStartDate('invalid'),'2026-11-22');
 });
+
+test('daily blended gross rate matches balance-weighted annual rates',()=>{
+  const p=buildDailySchedule({initialBalance:59514.16,threshold:15000,
+    firstAER:3.5,excessAER:1,tieredInterest:true,
+    startDate:'2026-11-26',years:1});
+  assert.ok(Math.abs(p.startingBlendedRate-1.6301)<0.0002);
+  assert.equal(p.days[0].blendedRate,p.startingBlendedRate);
+  assert.equal(p.months[0].blendedRate,p.startingBlendedRate);
+  assert.ok(p.days[1].blendedRate<p.days[0].blendedRate);
+  assert.equal(p.endingBlendedRate,p.days.at(-1).closingBlendedRate);
+});
+test('daily blended gross rate equals the single rate when tiering disabled',()=>{
+  const p=buildDailySchedule({initialBalance:59000,firstAER:2.5,
+    excessAER:1,tieredInterest:false,startDate:'2026-11-26',years:1});
+  assert.ok(p.days.every(d=>d.blendedRate===2.5));
+  assert.ok(p.months.every(m=>m.closingBlendedRate===2.5));
+});
