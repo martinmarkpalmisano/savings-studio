@@ -3,7 +3,7 @@ import {comparePair} from './comparison.mjs?v=14';
 
 const KEY='savings-studio-scenarios-v1';
 const $=id=>document.getElementById(id);
-const escapeHTML=value=>String(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','&#39;'}[ch]||'&#39;'));
+const escapeHTML=value=>String(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const fmt=(n,currency)=>new Intl.NumberFormat(currency==='EUR'?'it-IT':'en-GB',{style:'currency',currency}).format(n);
 const pct=n=>Number.isFinite(n)?n.toLocaleString('it-IT',{maximumFractionDigits:2})+'%':'—';
 
