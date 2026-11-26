@@ -154,6 +154,18 @@
             <div class="mini-card"><div class="mini-head"><span id="lastMonthLabel">MONTH 60</span><span class="mini-icon gold">◷</span></div><div class="mini-label">Last month — net interest</div><strong id="lastMonthInterest">—</strong><small>Includes compound growth</small></div>
           </section>
 
+          <section class="panel blended-panel" aria-labelledby="blendedHeading">
+            <div class="blended-heading">
+              <div><span class="eyebrow">BLENDED INTEREST RATE</span><h2 id="blendedHeading">Your effective rate across tiers</h2></div>
+              <span class="blended-tag">GROSS · BEFORE TAX</span>
+            </div>
+            <div class="blended-values">
+              <div><span>Starting blended rate</span><strong id="blendedStart">—</strong></div>
+              <div><span>End-of-projection blended rate</span><strong id="blendedEnd">—</strong></div>
+            </div>
+            <p class="blended-note" id="blendedExplanation">The balance-weighted average of your configured annual rates. It updates as your balance changes.</p>
+          </section>
+
           <section class="panel graph-panel">
             <div class="panel-heading"><div><span class="eyebrow">03 / THE EVOLUTION</span><h2>How it grows</h2></div><div class="segmented" role="group" aria-label="Chart metric"><button type="button" id="interestChartBtn" class="active" aria-pressed="true">Monthly interest</button><button type="button" id="balanceChartBtn" aria-pressed="false">Balance</button></div></div>
             <div class="chart-key"><span><i class="key-line primary"></i><span id="chartLegend">Net monthly credit</span></span><span><i class="key-line secondary"></i><span id="chartSecondaryLegend">Gross interest</span></span></div>
@@ -186,8 +198,8 @@
       </div>
 
       <section class="panel statement-panel">
-        <div class="statement-head"><div><span class="eyebrow">06 / EVERY PAYMENT</span><h2>Month-by-month statement</h2><p>See gross interest, tax, net interest credited, stamp duty, and subscription costs for every month.</p></div><div class="statement-actions"><select id="yearFilter" aria-label="Filter statement by year"><option value="1">Year 1</option></select><button class="action-button secondary" type="button" id="exportBtn">↓ Export CSV</button></div></div>
-        <div class="table-scroll"><table><thead><tr><th scope="col">MONTH</th><th scope="col">OPENING BALANCE</th><th scope="col" id="statementRateColumn">FIRST TIER</th><th scope="col">EXCESS TIER</th><th scope="col">GROSS INTEREST</th><th scope="col">WITHHOLDING</th><th scope="col">NET CREDITED</th><th scope="col">DEPOSIT</th><th scope="col">STAMP DUTY</th><th scope="col">PLAN FEE</th><th scope="col">NET BENEFIT</th><th scope="col">CLOSING BALANCE</th></tr></thead><tbody id="statementRows"></tbody></table></div>
+        <div class="statement-head"><div><span class="eyebrow">06 / EVERY PAYMENT</span><h2>Month-by-month statement</h2><p>See your opening blended rate alongside gross interest, tax, net credited interest, stamp duty and subscription costs.</p></div><div class="statement-actions"><select id="yearFilter" aria-label="Filter statement by year"><option value="1">Year 1</option></select><button class="action-button secondary" type="button" id="exportBtn">↓ Export CSV</button></div></div>
+        <div class="table-scroll"><table><thead><tr><th scope="col">MONTH</th><th scope="col">OPENING BALANCE</th><th scope="col">BLENDED RATE</th><th scope="col" id="statementRateColumn">FIRST TIER</th><th scope="col">EXCESS TIER</th><th scope="col">GROSS INTEREST</th><th scope="col">WITHHOLDING</th><th scope="col">NET CREDITED</th><th scope="col">DEPOSIT</th><th scope="col">STAMP DUTY</th><th scope="col">PLAN FEE</th><th scope="col">NET BENEFIT</th><th scope="col">CLOSING BALANCE</th></tr></thead><tbody id="statementRows"></tbody></table></div>
         <div class="statement-footer"><span id="tableCount">—</span><button class="text-btn" type="button" id="copyLinkBtn">↗ Share your settings</button></div>
       </section>
 
@@ -196,7 +208,7 @@
           <div>
             <span class="eyebrow">07 / DAILY PAYMENTS</span>
             <h2>Day-by-day statement</h2>
-            <p>Daily gross interest, estimated 26% withholding, net credited payment and closing savings balance, using real dates.</p>
+            <p>Daily blended gross rate, gross interest, estimated withholding, credited net interest and closing balance, using real dates.</p>
           </div>
           <div class="statement-actions">
             <select id="dailyPeriodFilter" aria-label="Choose monthly period of the daily statement"></select>
@@ -204,7 +216,7 @@
           </div>
         </div>
         <div class="table-scroll"><table><thead><tr>
-          <th scope="col">DATE</th><th scope="col">OPENING BALANCE</th>
+          <th scope="col">DATE</th><th scope="col">OPENING BALANCE</th><th scope="col">BLENDED RATE</th>
           <th scope="col">GROSS ACCRUED</th><th scope="col">TAX ESTIMATE</th>
           <th scope="col">NET CREDITED</th><th scope="col">TOP-UP</th>
           <th scope="col">STAMP DUTY</th><th scope="col">PLAN FEE</th>
