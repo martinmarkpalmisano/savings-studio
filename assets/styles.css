@@ -76,3 +76,11 @@ body[data-rate-mode="single"] .statement-panel:not(#dailyStatementSection) td:nt
 .blended-note{color:var(--muted);font-size:11px;line-height:1.65;margin:15px 0 0}
 td.blended-cell{font-weight:750;color:var(--mint);white-space:nowrap}
 @media(max-width:450px){.blended-panel{padding:18px}.blended-values{gap:9px}.blended-values>div{padding:12px 10px}.blended-values strong{font-size:22px}.blended-heading h2{font-size:16px}}
+
+/* Blended rate, featured in the main balance summary (v11) */
+.hero-blended{margin:16px 0 15px;padding:12px 15px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;border:1px solid rgba(82,230,185,.35);border-radius:11px;background:rgba(82,230,185,.075)}
+.hero-blended>div{display:flex;flex-direction:column;gap:3px}
+.hero-blended-label{display:block;color:var(--mint);letter-spacing:.07em;font-size:10px;font-weight:800}
+.hero-blended strong{display:block;color:var(--mint);font-size:29px;font-weight:850;font-variant-numeric:tabular-nums;line-height:1.15}
+.hero-blended-note{color:var(--muted);max-width:180px;font-size:11px;line-height:1.45}
+@media(max-width:500px){.hero-blended{padding:12px;gap:5px}.hero-blended strong{font-size:27px}.hero-blended-note{max-width:none}}
