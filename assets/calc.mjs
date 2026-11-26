@@ -4,6 +4,18 @@
  */
 export function roundMoney(value){return Math.round((value+Number.EPSILON)*100)/100;}
 export function effectiveMonthlyRate(aerPercent){return Math.pow(1+aerPercent/100,1/12)-1;}
+/**
+ * Balance-weighted gross advertised annual rate across interest tiers.
+ * In daily mode this is a weighted gross p.a. rate; in monthly mode
+ * it is a weighted quoted AER, not a separately annualised effective rate.
+ * Null means no positive balance from which to define a weighted rate.
+ */
+export function blendedGrossRate(balance,settings){
+  if(!Number.isFinite(balance)||balance<=0)return null;
+  const first=settings.tieredInterest?Math.min(balance,settings.threshold):balance;
+  const excess=settings.tieredInterest?Math.max(0,balance-settings.threshold):0;
+  return (first*settings.firstAER+excess*settings.excessAER)/balance;
+}
 /** Accept Italian decimal commas, English decimal points and grouped money amounts. */
 export function parseLocalizedNumber(value, kind='decimal'){
   if(typeof value==='number')return value;
@@ -57,6 +69,7 @@ export function buildSchedule(rawSettings={}){
   const months=[];
   for(let i=1;i<=settings.years*12;i++){
     const openingBalance=balance;
+    const blendedRate=blendedGrossRate(openingBalance,settings);
     const firstTierBalance=settings.tieredInterest?Math.min(openingBalance,settings.threshold):openingBalance;
     const excessTierBalance=settings.tieredInterest?Math.max(0,openingBalance-settings.threshold):0;
     const firstInterest=roundMoney(firstTierBalance*r1);
@@ -86,7 +99,7 @@ export function buildSchedule(rawSettings={}){
     const netMonthlyBenefit=roundMoney(netInterest-stampDuty-monthlyFee);
     months.push({
       index:i,year:Math.ceil(i/12),monthOfYear:((i-1)%12)+1,
-      openingBalance,firstTierBalance,excessTierBalance,
+      openingBalance,firstTierBalance,excessTierBalance,blendedRate,closingBlendedRate:blendedGrossRate(balance,settings),
       firstInterest,excessInterest,interest,tax,netInterest,stampDuty,monthlyFee,netMonthlyBenefit,
       deposit:settings.monthlyDeposit,closingBalance:balance,grossClosingBalance:grossBalance,
       totalInterest:roundMoney(totalFirstInterest+totalExcessInterest),
@@ -96,6 +109,8 @@ export function buildSchedule(rawSettings={}){
   const totalDeposits=roundMoney(settings.initialBalance+settings.years*12*settings.monthlyDeposit);
   return {
     settings,months,closingBalance:balance,grossClosingBalance:grossBalance,
+    startingBlendedRate:blendedGrossRate(settings.initialBalance,settings),
+    endingBlendedRate:blendedGrossRate(balance,settings),
     totalFirstInterest,totalExcessInterest,
     totalInterest:roundMoney(totalFirstInterest+totalExcessInterest),
     totalTax,totalNetInterest,totalStampDuty,totalMonthlyFees,
