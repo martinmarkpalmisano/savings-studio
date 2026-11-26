@@ -1,4 +1,4 @@
-# Savings Studio — flexible savings and fixed-term deposit calculator
+# Savings Studio — reusable savings scenarios and fixed-term deposit comparisons
 
 A responsive, no-backend savings calculator that works on GitHub Pages and can be added to a phone's home screen. All calculations run on the device; nothing is uploaded.
 
@@ -6,11 +6,23 @@ A responsive, no-backend savings calculator that works on GitHub Pages and can b
 
 Select **Account type → Fixed-term deposit** to calculate non-compounding returns from a locked bank deposit (nominal gross annual rate × locked principal × term in years). Choose a 6–60 month term and payout timing: monthly, quarterly, annual or maturity-only. Coupons are credited **outside** the deposit; unlike flexible savings, they do not earn further interest in this projection.
 
-The **Load Cherry Vincolato example** preset fills €60,000 principal, 4.20% gross annual rate, 48 months, quarterly coupons, 26% withholding and optional 0.20% yearly stamp duty. With duty **off**, the illustrative results are €10,080 gross interest, €2,620.80 interest tax, €7,459.20 net coupons, and €67,459.20 combined original principal plus coupons at maturity. With estimated duty **on**, €480 is deducted from the combined economic result, making it €66,979.20, or about **2.908% simple annualised return** after tax and duty.
+The **generic 48-month fixed deposit example template** starts with €60,000 principal, 4.20% gross annual rate, 48 months, quarterly coupons, 26% withholding and optional 0.20% yearly stamp duty. With duty **off**, the illustrative results are €10,080 gross interest, €2,620.80 interest tax, €7,459.20 net coupons, and €67,459.20 combined original principal plus coupons at maturity. With estimated duty **on**, €480 is deducted from the combined economic result, making it €66,979.20, or about **2.908% simple annualised return** after tax and duty.
 
 The locked principal remains at €60,000 throughout. Interest shown at maturity represents both deposit principal and the net coupon cash you have separately received. Real bank products can use different day-count methods, payout dates, rounding, early-withdrawal penalties, and stamp-duty rules. This is not a forecast of reinvestment returns and is not affiliated with Cherry Bank.
 
-Savings Studio retains your flexible-savings and fixed-term settings separately when switching modes. Fixed deposits have their own monthly coupon statement and CSV export.
+Savings Studio retains your flexible-savings and fixed-term drafts separately when switching modes. Fixed deposits have their own monthly coupon statement and CSV export.
+
+## Named scenario manager and comparison (v14)
+
+Savings Studio is bank-agnostic: configure a flexible, tiered, or fixed-term product, name it, and select **Save current settings**. Load a previously saved scenario to restore all its editable parameters; rename or delete scenarios individually. Saving an existing name requires confirmation. You can keep up to 100 scenarios.
+
+**Example templates** are optional illustrations, not hard-coded product integrations or verified offers. Loading a template does not save it automatically; adjust it and give it your own name. The old bank-specific preset has been replaced by this generic workflow.
+
+The **Compare two scenarios** panel lets you select two saved cases (fixed/flexible or either two of the same type), choose a common horizon (12, 24, 36, 48, or 60 months), and inspect profit after selected taxes and costs, stamp duty, fees, total wealth, and capital contributed. A fixed deposit is not extrapolated beyond maturity; the tool shows an incompatibility warning rather than inventing a renewal rate. Where contributions or currencies differ, the interface flags the comparison limitation.
+
+For fixed-term coupons, a comparison-only optional **Reinvest fixed coupons at gross annual (%)** parameter estimates what coupons would earn in a separate account using a constant gross annual nominal rate, 26% withholding by default, and monthly net crediting. It does *not* model tiered reinvestment rates, changing promotions, investment risk, or withdrawal restrictions. All other rates are assumed constant unless you change the scenario.
+
+Named scenarios are stored solely in your current browser's localStorage. They are **not synchronised across devices** and can disappear if browser storage is cleared. Use **Backup JSON** and **Import JSON** to move saved scenarios between devices; a name conflict is confirmed before importing.
 
 ## Features
 
