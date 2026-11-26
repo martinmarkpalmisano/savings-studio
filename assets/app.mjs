@@ -21,6 +21,7 @@ function compact(n) {
 }
 function percent(n){return Number(n).toLocaleString('en-GB',{maximumFractionDigits:2})+'%';}
 function signedMoney(n){return (n>=0?'+':'−')+money(Math.abs(n));}
+function blendedPercent(n){return n===null||!Number.isFinite(n)?'—':n.toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';}
 function detailedMoney(n){return new Intl.NumberFormat(settings.currency==='EUR'?'it-IT':'en-GB',{
   minimumFractionDigits:4,maximumFractionDigits:4
 }).format(n); }
@@ -87,6 +88,11 @@ function render(){
   document.body.dataset.rateMode=isTiered?'tiered':'single';
   document.querySelectorAll('[data-symbol]').forEach(x=>x.textContent=({GBP:'£',EUR:'€',USD:'$'})[settings.currency]);
   const months=projection.months, last=months[months.length-1];
+  $('blendedStart').textContent=blendedPercent(projection.startingBlendedRate);
+  $('blendedEnd').textContent=blendedPercent(projection.endingBlendedRate);
+  $('blendedExplanation').textContent=settings.tieredInterest
+    ? 'Weighted gross '+(daily?'annual p.a. rate':'quoted AER')+': '+money(Math.min(settings.initialBalance,settings.threshold),0)+' at '+blendedPercent(settings.firstAER)+' and '+money(Math.max(0,settings.initialBalance-settings.threshold),0)+' at '+blendedPercent(settings.excessAER)+'. The blended rate updates as the balance changes; it excludes tax and account fees.'
+    : 'Single-rate mode: the whole balance earns '+blendedPercent(settings.firstAER)+'. The blended rate equals that annual rate for any positive balance, before taxes and fees.';
   $('endingBalance').textContent=money(projection.closingBalance);
   $('totalInterest').textContent=signedMoney(projection.netProfit);
   $('durationLabel').textContent=settings.years + (settings.years===1?' year':' years');
@@ -132,7 +138,7 @@ function render(){
 }
 function table(){
   const rows=selectedYear==='all'?projection.months:projection.months.filter(m=>m.year===Number(selectedYear));
-  $('statementRows').innerHTML=rows.map(m=>'<tr><td>'+String(m.index).padStart(2,'0')+'</td><td>'+money(m.openingBalance)+'</td><td>'+money(m.firstInterest)+'</td><td>'+money(m.excessInterest)+'</td><td>'+money(m.interest)+'</td><td class="tax-amount">−'+money(m.tax)+'</td><td class="interest">+'+money(m.netInterest)+'</td><td>'+money(m.deposit)+'</td><td class="tax-amount">'+(m.stampDuty?'−'+money(m.stampDuty):'—')+'</td><td class="tax-amount">'+(m.monthlyFee?'−'+money(m.monthlyFee):'—')+'</td><td class="interest">'+signedMoney(m.netMonthlyBenefit)+'</td><td>'+money(m.closingBalance)+'</td></tr>').join('');
+  $('statementRows').innerHTML=rows.map(m=>'<tr><td>'+String(m.index).padStart(2,'0')+'</td><td>'+money(m.openingBalance)+'</td><td class="blended-cell">'+blendedPercent(m.blendedRate)+'</td><td>'+money(m.firstInterest)+'</td><td>'+money(m.excessInterest)+'</td><td>'+money(m.interest)+'</td><td class="tax-amount">−'+money(m.tax)+'</td><td class="interest">+'+money(m.netInterest)+'</td><td>'+money(m.deposit)+'</td><td class="tax-amount">'+(m.stampDuty?'−'+money(m.stampDuty):'—')+'</td><td class="tax-amount">'+(m.monthlyFee?'−'+money(m.monthlyFee):'—')+'</td><td class="interest">'+signedMoney(m.netMonthlyBenefit)+'</td><td>'+money(m.closingBalance)+'</td></tr>').join('');
   $('tableCount').textContent='Showing '+rows.length+' of '+projection.months.length+' months';
 }
 function dailyTable(){
@@ -152,7 +158,7 @@ function drawDailyPeriod(){
   if(settings.creditFrequency!=='daily')return;
   const rows=projection.days.filter(d=>d.period===Number(selectedDailyPeriod));
   $('dailyStatementRows').innerHTML=rows.map(m=>
-    '<tr><td>'+m.date+'</td><td>'+money(m.openingBalance)+'</td>'
+    '<tr><td>'+m.date+'</td><td>'+money(m.openingBalance)+'</td><td class="blended-cell">'+blendedPercent(m.blendedRate)+'</td>'
     +'<td>'+detailedMoney(m.interest)+'</td><td class="tax-amount">−'+detailedMoney(m.tax)+'</td>'
     +'<td class="interest">+'+money(m.netInterest)+'</td><td>'+money(m.deposit)+'</td>'
     +'<td class="tax-amount">'+(m.stampDuty?'−'+money(m.stampDuty):'—')+'</td>'
@@ -215,9 +221,9 @@ function chart(){
 }
 function exportDailyCSV(){
   if(settings.creditFrequency!=='daily'){toast('Select Daily interest first.');return;}
-  const header=['Date','Payment period','Opening balance','First tier gross accrued','Excess tier gross accrued','Total gross accrued','Tax accrued (estimated)','Net credited','Additional contribution','Stamp duty','External plan fee','Net daily economic benefit','Closing savings balance','Cumulative net interest','Cumulative stamp duty','Cumulative plan fees'];
-  const columns=m=>[m.date,m.period,m.openingBalance,m.firstInterest,m.excessInterest,m.interest,m.tax,m.netInterest,m.deposit,m.stampDuty,m.monthlyFee,m.netDailyBenefit,m.closingBalance,m.totalNetInterest,m.totalStampDuty,m.totalMonthlyFees];
-  const values=projection.days.map(d=>columns(d).map((v,i)=>i===0?String(v):i===1?String(v):Number(v).toFixed(i===3||i===4||i===5||i===6?6:2)).join(','));
+  const header=['Date','Payment period','Opening balance','Blended gross annual rate (%)','First tier gross accrued','Excess tier gross accrued','Total gross accrued','Tax accrued (estimated)','Net credited','Additional contribution','Stamp duty','External plan fee','Net daily economic benefit','Closing savings balance','Cumulative net interest','Cumulative stamp duty','Cumulative plan fees'];
+  const columns=m=>[m.date,m.period,m.openingBalance,m.blendedRate,m.firstInterest,m.excessInterest,m.interest,m.tax,m.netInterest,m.deposit,m.stampDuty,m.monthlyFee,m.netDailyBenefit,m.closingBalance,m.totalNetInterest,m.totalStampDuty,m.totalMonthlyFees];
+  const values=projection.days.map(d=>columns(d).map((v,i)=>i<=1?String(v):v===null?'':Number(v).toFixed(i===3?4:[4,5,6,7].includes(i)?6:2)).join(','));
   const blob=new Blob(['\uFEFF'+[header.join(','),...values].join('\r\n')],{type:'text/csv;charset=utf-8;'});
   const url=URL.createObjectURL(blob),a=document.createElement('a');
   a.href=url;a.download='savings-studio-daily-projection.csv';
@@ -225,8 +231,8 @@ function exportDailyCSV(){
   toast('Full daily statement exported.');
 }
 function exportCSV(){
-  const header=['Month','Year','Opening balance','First-tier gross interest','Excess-tier gross interest','Gross interest','Tax withheld','Net interest credited','Additional contribution','Stamp duty','Plan fee (paid externally)','Net monthly benefit','Closing account balance','Cumulative tax','Cumulative stamp duty','Cumulative plan fees','Cumulative net interest'];
-  const data=projection.months.map(m=>[m.index,m.year,m.openingBalance,m.firstInterest,m.excessInterest,m.interest,m.tax,m.netInterest,m.deposit,m.stampDuty,m.monthlyFee,m.netMonthlyBenefit,m.closingBalance,m.totalTax,m.totalStampDuty,m.totalMonthlyFees,m.totalNetInterest].map((n,i)=>i<2?String(n):Number(n).toFixed(2)).join(','));
+  const header=['Month','Year','Opening balance','Blended gross annual rate (%)','First-tier gross interest','Excess-tier gross interest','Gross interest','Tax withheld','Net interest credited','Additional contribution','Stamp duty','Plan fee (paid externally)','Net monthly benefit','Closing account balance','Cumulative tax','Cumulative stamp duty','Cumulative plan fees','Cumulative net interest'];
+  const data=projection.months.map(m=>[m.index,m.year,m.openingBalance,m.blendedRate,m.firstInterest,m.excessInterest,m.interest,m.tax,m.netInterest,m.deposit,m.stampDuty,m.monthlyFee,m.netMonthlyBenefit,m.closingBalance,m.totalTax,m.totalStampDuty,m.totalMonthlyFees,m.totalNetInterest].map((n,i)=>i<2?String(n):n===null?'':Number(n).toFixed(i===3?4:2)).join(','));
   const file=new Blob(['\uFEFF'+[header.join(','),...data].join('\r\n')],{type:'text/csv;charset=utf-8;'});
   const url=URL.createObjectURL(file),a=document.createElement('a');
   a.href=url;a.download='savings-studio-after-tax-monthly.csv';document.body.appendChild(a);a.click();a.remove();
