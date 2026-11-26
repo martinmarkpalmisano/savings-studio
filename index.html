@@ -34,8 +34,8 @@
   <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="./assets/icon-192.png" />
   <link rel="manifest" href="./manifest.webmanifest" />
-  <link rel="stylesheet" href="./assets/styles.css?v=13" />
-  <script src="./assets/app.mjs?v=13" type="module"></script>
+  <link rel="stylesheet" href="./assets/styles.css?v=14" />
+  <script src="./assets/app.mjs?v=14" type="module"></script>
 </head>
 <body>
   <div class="shell">
@@ -68,9 +68,33 @@
             </select>
             <span class="helper" id="accountTypeNote">Interest stays in savings and compounds automatically.</span>
           </div>
-          <div class="fixed-controls" id="fixedPresetPanel" hidden>
-            <button type="button" class="action-button secondary fixed-preset-button" id="cherryPresetBtn">Load Cherry Vincolato example · €60,000 / 4.20% / 48 months</button>
-            <span class="helper">Illustrative scenario, not an offer. Check Cherry's latest terms before opening an account.</span>
+          <div class="scenario-manager" id="scenarioManager">
+            <div class="tier-head"><span>YOUR SCENARIOS</span><span class="tier-sub">SAVED ON THIS DEVICE</span></div>
+            <label for="scenarioName">Scenario name</label>
+            <input id="scenarioName" class="scenario-text-input" type="text" maxlength="70" autocomplete="off" placeholder="e.g. My bank · 3.5% tiered" />
+            <div class="scenario-button-row">
+              <button id="saveScenarioBtn" class="action-button scenario-primary" type="button">Save current settings</button>
+            </div>
+            <label for="savedScenarioSelect">Saved scenarios</label>
+            <select id="savedScenarioSelect"><option value="">Select a saved scenario</option></select>
+            <div class="scenario-button-row scenario-actions">
+              <button id="loadScenarioBtn" class="action-button secondary" type="button">Load</button>
+              <button id="renameScenarioBtn" class="action-button secondary" type="button">Rename</button>
+              <button id="deleteScenarioBtn" class="action-button secondary" type="button">Delete</button>
+            </div>
+            <label for="exampleScenarioSelect">Example templates</label>
+            <select id="exampleScenarioSelect">
+              <option value="">Choose an illustrative template</option>
+              <option value="0">Flexible · two-tier savings example</option>
+              <option value="1">Fixed · 48-month, 4.20% coupon example</option>
+            </select>
+            <button id="loadExampleBtn" class="action-button secondary scenario-wide" type="button">Load template into calculator</button>
+            <div class="scenario-button-row scenario-actions">
+              <button id="exportScenariosBtn" class="text-btn" type="button">↓ Backup JSON</button>
+              <button id="importScenariosBtn" class="text-btn" type="button">↑ Import JSON</button>
+              <input id="importScenariosFile" type="file" accept=".json,application/json" hidden />
+            </div>
+            <span class="helper">Templates aren't live bank offers. Saved scenarios stay on this browser unless you export a backup. Loading a scenario replaces the current form, not your saved library.</span>
           </div>
           <div class="control-group">
             <label for="initialBalance">Starting balance <span class="hint" title="Money already in your savings account">ⓘ</span></label>
@@ -85,7 +109,7 @@
           <div class="control-group flexible-controls">
             <label for="creditFrequency">Interest payment frequency</label>
             <select id="creditFrequency" aria-describedby="frequencyDescription">
-              <option value="daily">Daily (Revolut Italy)</option>
+              <option value="daily">Daily (gross p.a.)</option>
               <option value="monthly">Monthly</option>
             </select>
             <span class="helper" id="frequencyDescription">Daily mode uses the gross annual rate divided by 365, or 366 in leap years, and credits amounts of at least €0.01.</span>
@@ -248,6 +272,27 @@
         </div>
       </div>
 
+      <section class="panel comparison-panel" id="comparisonPanel">
+        <div class="panel-heading"><div><span class="eyebrow">COMPARE / YOUR SAVED OPTIONS</span><h2>Compare two scenarios</h2></div></div>
+        <p class="comparison-intro">Compare profits after the selected taxes and costs, using the same time horizon. Save at least two scenarios above to compare them. Both can be flexible, fixed-term, or one of each.</p>
+        <div class="comparison-controls">
+          <div class="control-group"><label for="compareLeft">Scenario A</label><select id="compareLeft"><option value="">Select scenario A</option></select></div>
+          <div class="control-group"><label for="compareRight">Scenario B</label><select id="compareRight"><option value="">Select scenario B</option></select></div>
+          <div class="control-group"><label for="compareMonths">Comparison horizon</label><select id="compareMonths">
+            <option value="12">12 months</option><option value="24">24 months</option>
+            <option value="36">36 months</option><option value="48" selected>48 months</option>
+            <option value="60">60 months</option>
+          </select></div>
+          <div class="control-group"><label for="compareReinvest">Reinvest fixed coupons at gross annual (%)</label>
+            <div class="input-suffix"><input id="compareReinvest" type="text" inputmode="decimal" value="0" /><span>%</span></div>
+            <span class="helper">Optional flat rate in a separate account; coupon interest calculated monthly after tax. Zero means no reinvestment.</span></div>
+        </div>
+        <div id="comparisonResult" aria-live="polite">
+          <p class="comparison-empty">Save or select two scenarios to compare their returns.</p>
+        </div>
+        <p class="comparison-footnote">Fixed deposits maturing before the chosen horizon are not automatically renewed. A comparison is not like-for-like if starting balances or contributions differ. Flexible rates remain constant unless you explicitly change your scenario.</p>
+      </section>
+
       <section class="panel statement-panel">
         <div class="statement-head"><div><span class="eyebrow">06 / EVERY PAYMENT</span><h2 id="monthlyStatementTitle">Month-by-month statement</h2><p id="monthlyStatementDescription">See your opening blended rate alongside gross interest, tax, net credited interest, stamp duty and subscription costs.</p></div><div class="statement-actions"><select id="yearFilter" aria-label="Filter statement by year"><option value="1">Year 1</option></select><button class="action-button secondary" type="button" id="exportBtn">↓ Export CSV</button></div></div>
         <div class="table-scroll"><table><thead><tr><th scope="col">MONTH</th><th scope="col">OPENING BALANCE</th><th scope="col" class="flexible-column">BLENDED RATE</th><th scope="col" class="flexible-column" id="statementRateColumn">FIRST TIER</th><th scope="col" class="flexible-column">EXCESS TIER</th><th scope="col" id="grossInterestHeader">GROSS INTEREST</th><th scope="col" class="fixed-column">GROSS COUPON PAID</th><th scope="col">WITHHOLDING</th><th scope="col">NET CREDITED</th><th scope="col">DEPOSIT</th><th scope="col">STAMP DUTY</th><th scope="col">PLAN FEE</th><th scope="col">NET BENEFIT</th><th scope="col" id="statementClosingHeader">CLOSING BALANCE</th></tr></thead><tbody id="statementRows"></tbody></table></div>
@@ -315,7 +360,7 @@
 
             <details class="explain-panel"><summary>How is interest calculated? <span>+</span></summary><div><p>Monthly mode treats inputs as AER and uses <code>(1 + AER / 100)^(1/12) − 1</code>. Daily mode treats the inputs as gross annual p.a. rates, calculates daily accrued interest using the actual calendar year (365/366 days), withholds 26% by default and carries fractional net cents until €0.01 can be credited. These are different rate conventions; the same number may produce different annual results.</p><p>Gross interest is rounded to cents for each tier. The configured Italian withholding tax (default 26%) is deducted when interest is credited. Only net interest compounds; any monthly top-up is added at month-end.</p><p>If enabled, annual stamp duty is estimated at the selected rate (default 0.20%) on the year-end balance, with a €1 minimum, and deducted every 12 months. Actual bank charges depend on statement timing and product terms. This is an illustrative estimate, not a tax determination.</p><p>When the optional monthly plan fee is enabled, it is assumed to be paid outside the savings account. The account balance and future interest are therefore unchanged, but total profit and monthly net benefit are reduced by each subscription payment.</p><p>This is an illustrative forecast, not a bank statement. Bank payment dates, taxes rounded to cents, rate conventions, promotional periods, and fees may differ from this projection. Switching currencies changes the symbol, not the numeric amounts.</p></div></details>
     </main>
-    <footer class="site-footer"><span>✦ Savings Studio · v13</span><span>Made for clarity. No sign-in · No tracking · No uploaded data.</span></footer>
+    <footer class="site-footer"><span>✦ Savings Studio · v14</span><span>Made for clarity. No sign-in · No tracking · No uploaded data.</span></footer>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </body>
