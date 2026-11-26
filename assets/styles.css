@@ -84,3 +84,29 @@ td.blended-cell{font-weight:750;color:var(--mint);white-space:nowrap}
 .hero-blended strong{display:block;color:var(--mint);font-size:29px;font-weight:850;font-variant-numeric:tabular-nums;line-height:1.15}
 .hero-blended-note{color:var(--muted);max-width:180px;font-size:11px;line-height:1.45}
 @media(max-width:500px){.hero-blended{padding:12px;gap:5px}.hero-blended strong{font-size:27px}.hero-blended-note{max-width:none}}
+
+/* Fixed-term account mode: locked principal, external non-compounding coupons */
+.fixed-controls[hidden],.fixed-summary[hidden]{display:none!important}
+.fixed-column{display:none}
+body[data-account-type="fixed"] .flexible-controls,
+body[data-account-type="fixed"] .flexible-results,
+body[data-account-type="fixed"] .flexible-column{display:none!important}
+body[data-account-type="fixed"] .fixed-column{display:table-cell}
+body[data-account-type="fixed"] .tier-card-first{margin-top:14px}
+body[data-account-type="fixed"] .fixed-terms{margin-top:16px}
+body[data-account-type="fixed"] .fixed-summary{display:block}
+body[data-account-type="fixed"] .statement-panel:not(#dailyStatementSection) th:nth-child(5),
+body[data-account-type="fixed"] .statement-panel:not(#dailyStatementSection) td:nth-child(5){display:table-cell}
+.fixed-preset-button{width:100%;text-align:left;white-space:normal;line-height:1.55;padding:12px}
+#fixedPresetPanel{margin-bottom:15px}
+#fixedPresetPanel .helper{display:block;margin-top:8px}
+.fixed-terms .control-group{margin:12px 0}
+.fixed-terms select,#accountType{width:100%;min-height:44px}
+.fixed-summary{padding:27px 30px}
+.fixed-summary .hero-label{margin-top:15px}
+.fixed-stat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin-top:25px}
+.fixed-stat-grid>div{padding:13px 15px;border:1px solid rgba(255,255,255,.15);border-radius:11px;background:rgba(0,0,0,.08)}
+.fixed-stat-grid small{display:block;color:var(--muted);font-size:10px;font-weight:700;line-height:1.5}
+.fixed-stat-grid strong{display:block;color:var(--mint);font-size:21px;font-weight:800;margin-top:5px;line-height:1.35}
+.fixed-disclaimer{font-size:11px;line-height:1.65;color:var(--muted);margin:16px 0 0}
+@media(max-width:600px){.fixed-summary{padding:20px}.fixed-stat-grid{gap:9px}.fixed-stat-grid>div{padding:11px}.fixed-stat-grid strong{font-size:17px}}
