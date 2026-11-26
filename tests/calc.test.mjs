@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {buildSchedule,effectiveMonthlyRate,parseLocalizedNumber} from '../assets/calc.mjs';
+import {buildSchedule,effectiveMonthlyRate,parseLocalizedNumber,blendedGrossRate} from '../assets/calc.mjs';
 test('AER compounds over 12 months',()=>{
   const r=effectiveMonthlyRate(3.5);
   assert.ok(Math.abs(Math.pow(1+r,12)-1.035)<1e-12);
@@ -158,4 +158,34 @@ test('net monthly benefit can be negative and stamp duty compounds separately',(
 });
 test('localized comma monthly fee is supported',()=>{
   assert.equal(parseLocalizedNumber('9,99','money'),9.99);
+});
+
+test('blended gross rate matches observed Revolut Standard 1.63% on 59,514.16',()=>{
+  const cfg={initialBalance:59514.16,threshold:15000,tieredInterest:true,
+    firstAER:3.5,excessAER:1,years:1};
+  const p=buildSchedule(cfg);
+  const expected=(15000*3.5+(59514.16-15000)*1)/59514.16;
+  assert.ok(Math.abs(blendedGrossRate(59514.16,p.settings)-expected)<1e-12);
+  assert.ok(Math.abs(p.startingBlendedRate-1.6301)<0.0002);
+  assert.equal(p.months[0].blendedRate,p.startingBlendedRate);
+  assert.ok(p.endingBlendedRate<p.startingBlendedRate);
+});
+test('single-rate mode blended rate equals configured AER',()=>{
+  const p=buildSchedule({initialBalance:50000,firstAER:6.25,excessAER:1,
+    threshold:15000,tieredInterest:false,years:1});
+  assert.equal(p.startingBlendedRate,6.25);
+  assert.equal(p.endingBlendedRate,6.25);
+  assert.ok(p.months.every(m=>m.blendedRate===6.25));
+});
+test('blended rate handles no balance and changing tiers without tax influence',()=>{
+  const zero=buildSchedule({initialBalance:0,years:1});
+  assert.equal(zero.startingBlendedRate,null);
+  assert.equal(zero.months[0].blendedRate,null);
+  const p=buildSchedule({initialBalance:14900,monthlyDeposit:500,years:1,
+    threshold:15000,firstAER:3.5,excessAER:1});
+  assert.equal(p.startingBlendedRate,3.5);
+  assert.ok(p.endingBlendedRate<3.5);
+  const taxFree=buildSchedule({initialBalance:59514.16,firstAER:3.5,excessAER:1,taxRate:0});
+  const taxed=buildSchedule({initialBalance:59514.16,firstAER:3.5,excessAER:1,taxRate:26});
+  assert.equal(taxFree.startingBlendedRate,taxed.startingBlendedRate);
 });
