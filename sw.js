@@ -1,5 +1,5 @@
-const CACHE='savings-studio-v11';
-const FILES=['./','./index.html','./assets/styles.css','./assets/app.mjs','./assets/calc.mjs','./assets/daily.mjs','./assets/favicon.svg','./assets/icon-192.png','./assets/icon-512.png','./manifest.webmanifest','./sitemap.xml'];
+const CACHE='savings-studio-v12';
+const FILES=['./','./index.html','./assets/styles.css?v=12','./assets/app.mjs?v=12','./assets/calc.mjs?v=12','./assets/daily.mjs?v=12','./assets/favicon.svg','./assets/icon-192.png','./assets/icon-512.png','./manifest.webmanifest','./sitemap.xml'];
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(FILES)).then(()=>self.skipWaiting()));
 });
