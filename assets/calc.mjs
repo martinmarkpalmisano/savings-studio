@@ -14,6 +14,8 @@ export function blendedGrossRate(balance,settings){
   if(!Number.isFinite(balance)||balance<=0)return null;
   const first=settings.tieredInterest?Math.min(balance,settings.threshold):balance;
   const excess=settings.tieredInterest?Math.max(0,balance-settings.threshold):0;
+  if(excess===0)return settings.firstAER;
+  if(first===0)return settings.excessAER;
   return (first*settings.firstAER+excess*settings.excessAER)/balance;
 }
 /** Accept Italian decimal commas, English decimal points and grouped money amounts. */
