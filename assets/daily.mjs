@@ -1,4 +1,4 @@
-import { normalizeSettings, roundMoney, effectiveMonthlyRate } from './calc.mjs';
+import { normalizeSettings, roundMoney, effectiveMonthlyRate, blendedGrossRate } from './calc.mjs';
 
 /**
  * Daily gross p.a. deposit interest, 365/366 actual-day basis.
@@ -43,6 +43,7 @@ export function buildDailySchedule(rawSettings={}){
     const dateString=date.toISOString().slice(0,10);
     const daysInYear=isLeap(date.getUTCFullYear())?366:365;
     const openingBalance=balance;
+    const blendedRate=blendedGrossRate(openingBalance,settings);
     const firstBase=settings.tieredInterest?Math.min(openingBalance,settings.threshold):openingBalance;
     const excessBase=settings.tieredInterest?Math.max(0,openingBalance-settings.threshold):0;
     const firstGross=firstBase*rateFirst/daysInYear;
@@ -83,7 +84,7 @@ export function buildDailySchedule(rawSettings={}){
     days.push({
       date:dateString,index:days.length+1,period:periodIndex+1,
       year:Math.floor(periodIndex/12)+1,monthOfYear:periodIndex%12+1,
-      openingBalance,firstInterest:firstGross,excessInterest:excessGross,interest:gross,tax,
+      openingBalance,blendedRate,closingBlendedRate:blendedGrossRate(balance,settings),firstInterest:firstGross,excessInterest:excessGross,interest:gross,tax,
       netInterest:credited,deposit,stampDuty,monthlyFee,
       netDailyBenefit:roundMoney(credited-stampDuty-monthlyFee),
       closingBalance:balance,grossClosingBalance:grossBalance,
@@ -96,6 +97,8 @@ export function buildDailySchedule(rawSettings={}){
         startDate:new Date(periodIndex===0?start.getTime():endBounds[periodIndex-1]).toISOString().slice(0,10),
         endDate:dateString,
         openingBalance:firstOfMonth,
+        blendedRate:blendedGrossRate(firstOfMonth,settings),
+        closingBlendedRate:blendedGrossRate(balance,settings),
         firstTierBalance:settings.tieredInterest?Math.min(firstOfMonth,settings.threshold):firstOfMonth,
         excessTierBalance:settings.tieredInterest?Math.max(0,firstOfMonth-settings.threshold):0,
         firstInterest:roundMoney(partial.first),excessInterest:roundMoney(partial.excess),
@@ -115,6 +118,8 @@ export function buildDailySchedule(rawSettings={}){
   return {
     settings,days,months,
     closingBalance:balance,grossClosingBalance:grossBalance,
+    startingBlendedRate:blendedGrossRate(settings.initialBalance,settings),
+    endingBlendedRate:blendedGrossRate(balance,settings),
     totalFirstInterest:roundMoney(totalFirstRaw),totalExcessInterest:roundMoney(totalExcessRaw),
     totalInterest:roundMoney(totalGrossRaw),totalTax:roundMoney(totalTaxRaw),
     totalNetInterest,totalStampDuty,totalMonthlyFees,
