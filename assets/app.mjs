@@ -97,7 +97,6 @@ function render(){
   const daily=!fixed&&settings.creditFrequency==='daily';
   $('accountType').value=fixed?'fixed':'flexible';
   $('accountTypeNote').textContent=fixed?'Locked principal; interest coupons are paid out rather than compounded.':'Interest stays in savings and compounds automatically.';
-  $('fixedPresetPanel').hidden=!fixed;
   $('fixedTermsPanel').hidden=!fixed;
   $('fixedSummarySection').hidden=!fixed;
   $('fixedTermMonths').value=String(settings.fixedTermMonths);
