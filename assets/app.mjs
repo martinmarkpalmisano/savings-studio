@@ -88,6 +88,7 @@ function render(){
   document.body.dataset.rateMode=isTiered?'tiered':'single';
   document.querySelectorAll('[data-symbol]').forEach(x=>x.textContent=({GBP:'£',EUR:'€',USD:'$'})[settings.currency]);
   const months=projection.months, last=months[months.length-1];
+  $('heroBlendedRate').textContent=blendedPercent(projection.startingBlendedRate);
   $('blendedStart').textContent=blendedPercent(projection.startingBlendedRate);
   $('blendedEnd').textContent=blendedPercent(projection.endingBlendedRate);
   $('blendedExplanation').textContent=settings.tieredInterest
