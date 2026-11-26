@@ -73,8 +73,16 @@ function inputs(){
 }
 function render(){
   const fixed=settings.accountType==='fixed';
+  const preservedTierSetting=settings.tieredInterest;
+  const preservedMonthlyDeposit=settings.monthlyDeposit;
   projection=fixed?buildFixedSchedule(settings):settings.creditFrequency==='daily'?buildDailySchedule(settings):buildSchedule(settings);
   settings=projection.settings;
+  if(fixed){
+    // Fixed-term mode ignores top-ups and tiering, without overwriting the
+    // flexible savings scenario when switching back.
+    settings.tieredInterest=preservedTierSetting;
+    settings.monthlyDeposit=preservedMonthlyDeposit;
+  }
   const daily=!fixed&&settings.creditFrequency==='daily';
   $('accountType').value=fixed?'fixed':'flexible';
   $('accountTypeNote').textContent=fixed?'Locked principal; interest coupons are paid out rather than compounded.':'Interest stays in savings and compounds automatically.';
@@ -355,10 +363,6 @@ function init(){
   $('accountType').addEventListener('change',e=>{
     settings.accountType=e.target.value;
     selectedYear='1';selectedDailyPeriod='1';
-    if(settings.accountType==='fixed'){
-      settings.tieredInterest=false;
-      settings.monthlyDeposit=0;
-    }
     render();
   });
   $('fixedTermMonths').addEventListener('change',e=>{settings.fixedTermMonths=Number(e.target.value);render();});
