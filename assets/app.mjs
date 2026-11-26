@@ -1,6 +1,7 @@
-import { buildSchedule, DEFAULTS, parseLocalizedNumber } from './calc.mjs?v=13';
-import { buildDailySchedule, safeStartDate } from './daily.mjs?v=13';
-import { buildFixedSchedule } from './fixed.mjs?v=13';
+import { buildSchedule, DEFAULTS, parseLocalizedNumber } from './calc.mjs?v=14';
+import { buildDailySchedule, safeStartDate } from './daily.mjs?v=14';
+import { buildFixedSchedule } from './fixed.mjs?v=14';
+import { initScenarioUI } from './scenario-ui.mjs?v=14';
 const $ = id => document.getElementById(id);
 const fields = ['initialBalance','monthlyDeposit','threshold','firstAER','excessAER','years','currency','taxRate','stampRate','monthlyFee'];
 const moneyFields = new Set(['initialBalance','monthlyDeposit','threshold','monthlyFee']);
@@ -384,13 +385,6 @@ function init(){
   });
   $('fixedTermMonths').addEventListener('change',e=>{settings.fixedTermMonths=Number(e.target.value);render();});
   $('fixedPayoutFrequency').addEventListener('change',e=>{settings.fixedPayoutFrequency=e.target.value;render();});
-  $('cherryPresetBtn').addEventListener('click',()=>{
-    settings={...settings,accountType:'fixed',initialBalance:60000,firstAER:4.2,
-      fixedTermMonths:48,fixedPayoutFrequency:'quarterly',
-      tieredInterest:false,monthlyDeposit:0,stampDuty:true,stampRate:0.2,
-      monthlyFeeEnabled:false,taxRate:26,currency:'EUR'};
-    selectedYear='1';inputs();render();toast('Cherry-style 48-month example loaded.');
-  });
   $('creditFrequency').addEventListener('change',e=>{settings.creditFrequency=e.target.value;render();});
   $('startDate').addEventListener('change',e=>{settings.startDate=safeStartDate(e.target.value);selectedDailyPeriod='1';render();});
   $('dailyPeriodFilter').addEventListener('change',e=>{selectedDailyPeriod=e.target.value;drawDailyPeriod();});
@@ -401,6 +395,17 @@ function init(){
   $('copyLinkBtn').addEventListener('click',share);
   $('resetBtn').addEventListener('click',()=>{
     accountDrafts={flexible:null,fixed:null};settings={...DEFAULTS,startDate:localDateISO()};selectedYear='1';selectedDailyPeriod='1';inputs();render();toast('Calculator reset.');
+  });
+  initScenarioUI({
+    getSettings:()=>({...settings}),
+    applySettings:next=>{
+      settings={...next};
+      const mode=settings.accountType==='fixed'?'fixed':'flexible';
+      accountDrafts[mode]={...settings};
+      selectedYear='1';selectedDailyPeriod='1';
+      inputs();render();
+    },
+    notify:toast
   });
   $('themeToggle').addEventListener('click',()=>{
     const theme=document.documentElement.dataset.theme==='light'?'dark':'light';
