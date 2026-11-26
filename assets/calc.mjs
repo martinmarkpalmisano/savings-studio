@@ -40,7 +40,8 @@ export const DEFAULTS=Object.freeze({
   firstAER:3.5,excessAER:1.25,years:5,currency:'EUR',
   taxRate:26,stampDuty:false,stampRate:0.2,
   monthlyFeeEnabled:false,monthlyFee:9.99,
-  creditFrequency:'daily',startDate:'2026-11-22'
+  creditFrequency:'daily',startDate:'2026-11-22',
+  accountType:'flexible',fixedTermMonths:48,fixedPayoutFrequency:'quarterly'
 });
 export function normalizeSettings(input={}){
   return {
@@ -58,6 +59,9 @@ export function normalizeSettings(input={}){
     monthlyFeeEnabled:input.monthlyFeeEnabled===true||input.monthlyFeeEnabled==='true',
     monthlyFee:roundMoney(safeNumber(input.monthlyFee,DEFAULTS.monthlyFee,1e8)),
     creditFrequency:input.creditFrequency==='monthly'?'monthly':'daily',
+    accountType:input.accountType==='fixed'?'fixed':'flexible',
+    fixedTermMonths:Math.max(1,Math.min(360,Math.round(safeNumber(input.fixedTermMonths,DEFAULTS.fixedTermMonths,360))||DEFAULTS.fixedTermMonths)),
+    fixedPayoutFrequency:['monthly','quarterly','annual','maturity'].includes(input.fixedPayoutFrequency)?input.fixedPayoutFrequency:'quarterly',
     startDate:typeof input.startDate==='string'?input.startDate:DEFAULTS.startDate
   };
 }
