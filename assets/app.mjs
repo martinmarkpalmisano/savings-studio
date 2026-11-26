@@ -1,11 +1,12 @@
-import { buildSchedule, DEFAULTS, parseLocalizedNumber } from './calc.mjs?v=12';
-import { buildDailySchedule, safeStartDate } from './daily.mjs?v=12';
+import { buildSchedule, DEFAULTS, parseLocalizedNumber } from './calc.mjs?v=13';
+import { buildDailySchedule, safeStartDate } from './daily.mjs?v=13';
+import { buildFixedSchedule } from './fixed.mjs?v=13';
 const $ = id => document.getElementById(id);
 const fields = ['initialBalance','monthlyDeposit','threshold','firstAER','excessAER','years','currency','taxRate','stampRate','monthlyFee'];
 const moneyFields = new Set(['initialBalance','monthlyDeposit','threshold','monthlyFee']);
 const parseInput = (field,value) => parseLocalizedNumber(value,moneyFields.has(field)?'money':'decimal');
 const displayInput = (field,value) => ['currency','years'].includes(field) ? String(value) : String(value).replace('.', ',');
-const aliases = {initialBalance:'start',monthlyDeposit:'deposit',threshold:'limit',firstAER:'rate1',excessAER:'rate2',tieredInterest:'tiered',years:'years',currency:'currency',taxRate:'tax',stampDuty:'stamp',stampRate:'stampRate',monthlyFeeEnabled:'monthlyFeeEnabled',monthlyFee:'monthlyFee',creditFrequency:'frequency',startDate:'date'};
+const aliases = {initialBalance:'start',monthlyDeposit:'deposit',threshold:'limit',firstAER:'rate1',excessAER:'rate2',tieredInterest:'tiered',years:'years',currency:'currency',taxRate:'tax',stampDuty:'stamp',stampRate:'stampRate',monthlyFeeEnabled:'monthlyFeeEnabled',monthlyFee:'monthlyFee',creditFrequency:'frequency',startDate:'date',accountType:'type',fixedTermMonths:'term',fixedPayoutFrequency:'payout'};
 const settingKey = 'savings-studio-settings-v1';
 const themeKey = 'savings-studio-theme-v1';
 let settings = {...DEFAULTS}, projection, selectedYear = '1', selectedDailyPeriod = '1', chartMetric = 'interest', toastTimer;
@@ -54,7 +55,7 @@ function load(){
   } catch(e){}
   const params = new URLSearchParams(location.search);
   for(const [field,key] of Object.entries(aliases)){
-    if(params.has(key)) settings[field] = ['currency','creditFrequency','startDate'].includes(field) ? params.get(key) : ['stampDuty','tieredInterest','monthlyFeeEnabled'].includes(field) ? ['true','1'].includes(params.get(key)) : parseInput(field,params.get(key));
+    if(params.has(key)) settings[field] = ['currency','creditFrequency','startDate','accountType','fixedPayoutFrequency'].includes(field) ? params.get(key) : ['stampDuty','tieredInterest','monthlyFeeEnabled'].includes(field) ? ['true','1'].includes(params.get(key)) : parseInput(field,params.get(key));
   }
 }
 function inputs(){
@@ -66,25 +67,48 @@ function inputs(){
   $('monthlyFeeContainer').hidden=!settings.monthlyFeeEnabled;
   $('creditFrequency').value=settings.creditFrequency;
   $('startDate').value=safeStartDate(settings.startDate);
+  $('accountType').value=settings.accountType;
+  $('fixedTermMonths').value=String(settings.fixedTermMonths);
+  $('fixedPayoutFrequency').value=settings.fixedPayoutFrequency;
 }
 function render(){
-  projection = settings.creditFrequency==='daily' ? buildDailySchedule(settings) : buildSchedule(settings);
-  settings = projection.settings;
-  const daily=settings.creditFrequency==='daily';
+  const fixed=settings.accountType==='fixed';
+  projection=fixed?buildFixedSchedule(settings):settings.creditFrequency==='daily'?buildDailySchedule(settings):buildSchedule(settings);
+  settings=projection.settings;
+  const daily=!fixed&&settings.creditFrequency==='daily';
+  $('accountType').value=fixed?'fixed':'flexible';
+  $('accountTypeNote').textContent=fixed?'Locked principal; interest coupons are paid out rather than compounded.':'Interest stays in savings and compounds automatically.';
+  $('fixedPresetPanel').hidden=!fixed;
+  $('fixedTermsPanel').hidden=!fixed;
+  $('fixedSummarySection').hidden=!fixed;
+  $('fixedTermMonths').value=String(settings.fixedTermMonths);
+  $('fixedPayoutFrequency').value=settings.fixedPayoutFrequency;
+  document.body.dataset.accountType=fixed?'fixed':'flexible';
+  $('monthlyStatementTitle').textContent=fixed?'Fixed deposit · monthly coupon statement':'Month-by-month statement';
+  $('monthlyStatementDescription').textContent=fixed?'Gross interest accrues each month; net coupons appear in their payout months. Locked principal does not compound.':'See your opening blended rate alongside gross interest, tax, net credited interest, stamp duty and subscription costs.';
+  $('grossInterestHeader').textContent=fixed?'GROSS INTEREST ACCRUED':'GROSS INTEREST';
+  $('statementClosingHeader').textContent=fixed?'LOCKED PRINCIPAL':'CLOSING BALANCE';
+  $('interestCreditLabel').textContent=fixed?'Net coupons paid externally':'Net interest credited';
+  $('effectiveValueLabel').textContent=fixed?'Total wealth after taxes, duty and fees':'Equivalent final value after external plan fees';
+  $('grossFinalLabel').textContent=fixed?'Principal plus gross coupons (before deductions)':'Hypothetical ending balance without tax';
+  $('taxTimingNote').textContent=fixed?'26% withholding is applied to gross interest when coupons are paid.':'Default 26% withholding on credited interest. Only net interest compounds for flexible savings.';
+  $('stampTimingNote').textContent=fixed?'Simplified annual 0.20% of locked principal (pro-rated for partial final year). Paid outside the deposit.':'Simplified annual estimate. Bank statement timing and conditions may differ.';
+  $('sidebarFooterText').textContent=fixed?'Fixed-term calculations use nominal annual simple interest; principal stays locked.':'After-tax interest is reinvested according to your selected payment frequency. Rates are assumed constant.';
+
   $('creditFrequency').value=settings.creditFrequency;
   $('startDateControl').hidden=!daily;
   $('startDate').value=safeStartDate(settings.startDate);
   $('dailyStatementSection').hidden=!daily;
-  $('rateTypeLabel').textContent=daily?'GROSS P.A.':'AER / YEAR';
-  $('firstRateLabel').textContent=daily?'Annual interest rate (gross p.a.)':'Annual Equivalent Rate (AER)';
-  $('excessRateLabel').textContent=daily?'Annual interest rate (gross p.a.)':'Annual Equivalent Rate (AER)';
+  $('rateTypeLabel').textContent=fixed||daily?'GROSS P.A.':'AER / YEAR';
+  $('firstRateLabel').textContent=fixed||daily?'Annual interest rate (gross p.a.)':'Annual Equivalent Rate (AER)';
+  $('excessRateLabel').textContent=fixed||daily?'Annual interest rate (gross p.a.)':'Annual Equivalent Rate (AER)';
   $('frequencyDescription').textContent=daily
     ? 'Daily accrual at gross p.a. / 365 or 366, minus tax. Fractional cents carry over until €0.01 can be credited.'
     : 'Monthly effective interest, using the quoted AER.';
   $('yearsValue').textContent=settings.years;
   $('monthlyFeeEnabled').checked=settings.monthlyFeeEnabled;
   $('monthlyFeeContainer').hidden=!settings.monthlyFeeEnabled;
-  const isTiered = settings.tieredInterest;
+  const isTiered = !fixed&&settings.tieredInterest;
   $('tieredInterest').checked=isTiered;
   $('thresholdControl').hidden=!isTiered;
   $('excessTierCard').hidden=!isTiered;
@@ -98,6 +122,16 @@ function render(){
   const months=projection.months, last=months[months.length-1];
   const initialBlended=blendedForDisplay(settings.initialBalance);
   const finalBlended=blendedForDisplay(projection.closingBalance);
+  if(fixed){
+    $('fixedFinalWealth').textContent=money(projection.overallValue);
+    $('fixedPrincipal').textContent=money(settings.initialBalance);
+    $('fixedNetGain').textContent=signedMoney(projection.netProfit);
+    $('fixedGrossRate').textContent=blendedPercent(settings.firstAER);
+    $('fixedTaxNetRate').textContent=blendedPercent(projection.netNominalRate);
+    $('fixedEffectiveRate').textContent=blendedPercent(projection.annualisedNetSimpleRate);
+    const payoutNames={monthly:'Monthly',quarterly:'Quarterly',annual:'Annual',maturity:'At maturity'};
+    $('fixedPayoutLabel').textContent=payoutNames[settings.fixedPayoutFrequency]||'Quarterly';
+  }
   $('heroBlendedRate').textContent=blendedPercent(initialBlended);
   $('blendedStart').textContent=blendedPercent(initialBlended);
   $('blendedEnd').textContent=blendedPercent(finalBlended);
@@ -120,14 +154,16 @@ function render(){
   $('taxStamp').textContent='−'+money(projection.totalStampDuty);
   $('planFeesTotal').textContent='−'+money(projection.totalMonthlyFees);
   $('effectiveFinalValue').textContent=money(projection.balanceAfterExternalFees);
-  $('monthlyFeeNote').textContent=settings.monthlyFeeEnabled
-    ? 'The '+money(settings.monthlyFee)+' plan fee is paid outside savings each month: it reduces total economic profit but not the bank balance or interest compounding.'
-    : 'Plan fees are excluded. Enable them if your savings rate requires a paid subscription.';
+  $('monthlyFeeNote').textContent=fixed?
+    'Net coupons and plan fees are paid outside the fixed deposit. They affect overall wealth, not the locked principal.'
+    : settings.monthlyFeeEnabled
+      ? 'The '+money(settings.monthlyFee)+' plan fee is paid outside savings each month: it reduces total economic profit but not the bank balance or interest compounding.'
+      : 'Plan fees are excluded. Enable them if your savings rate requires a paid subscription.';
   $('taxNetInterest').textContent='+'+money(projection.totalNetInterest);
   $('taxNetProfit').textContent=signedMoney(projection.netProfit);
   $('grossFinal').textContent=money(projection.grossClosingBalance);
   $('stampRateContainer').hidden=!settings.stampDuty;
-  $('taxSummaryNote').textContent=settings.stampDuty?'With estimated annual deposit-account stamp duty.':'Deposit-account stamp duty excluded. Enable it in account settings if applicable.';
+  $('taxSummaryNote').textContent=settings.stampDuty?'Includes illustrative annual deposit stamp duty.':'Stamp duty excluded. Enable it if applicable to the bank product.';
   $('firstTierCaption').textContent=percent(settings.firstAER)+' on first '+money(settings.threshold,0);
   $('secondTierCaption').textContent=percent(settings.excessAER)+' above '+money(settings.threshold,0);
   const share=projection.totalInterest>0 ? 100*projection.totalFirstInterest/projection.totalInterest : 100;
@@ -137,9 +173,10 @@ function render(){
   $('crossNote').textContent=crossed===0?'Starting balance is already above the limit. Only the excess earns the second-tier rate.'
     :crossed===null?'The balance stays within the first tier throughout the projection.'
     :'The balance first exceeds the limit at the end of month '+crossed+'. The excess earns its rate from month '+(crossed+1)+'.';
-  if(selectedYear!=='all' && Number(selectedYear)>settings.years) selectedYear=String(settings.years);
+  const periodYears=fixed?Math.ceil(settings.fixedTermMonths/12):settings.years;
+  if(selectedYear!=='all' && Number(selectedYear)>periodYears) selectedYear=String(periodYears);
   let options='<option value="all">All months</option>';
-  for(let i=1;i<=settings.years;i++)options+='<option value="'+i+'">Year '+i+'</option>';
+  for(let i=1;i<=periodYears;i++)options+='<option value="'+i+'">Year '+i+'</option>';
   $('yearFilter').innerHTML=options;
   $('yearFilter').value=selectedYear;
   table();
