@@ -186,6 +186,19 @@ function render(){
 }
 function table(){
   const rows=selectedYear==='all'?projection.months:projection.months.filter(m=>m.year===Number(selectedYear));
+  if(settings.accountType==='fixed'){
+    $('statementRows').innerHTML=rows.map(m=>
+      '<tr><td>'+String(m.index).padStart(2,'0')+'</td><td>'+money(m.openingBalance)+'</td>'
+      +'<td>'+money(m.interest)+'</td><td class="interest">'+money(m.grossPaid)+'</td>'
+      +'<td class="tax-amount">−'+money(m.tax)+'</td><td class="interest">+'+money(m.netInterest)+'</td>'
+      +'<td>'+money(m.deposit)+'</td>'
+      +'<td class="tax-amount">'+(m.stampDuty?'−'+money(m.stampDuty):'—')+'</td>'
+      +'<td class="tax-amount">'+(m.monthlyFee?'−'+money(m.monthlyFee):'—')+'</td>'
+      +'<td class="interest">'+signedMoney(m.netMonthlyBenefit)+'</td>'
+      +'<td>'+money(m.closingBalance)+'</td></tr>').join('');
+    $('tableCount').textContent='Showing '+rows.length+' of '+projection.months.length+' months · '+projection.couponCount+' coupon payouts';
+    return;
+  }
   $('statementRows').innerHTML=rows.map(m=>'<tr><td>'+String(m.index).padStart(2,'0')+'</td><td>'+money(m.openingBalance)+'</td><td class="blended-cell">'+blendedPercent(blendedForDisplay(m.openingBalance))+'</td><td>'+money(m.firstInterest)+'</td><td>'+money(m.excessInterest)+'</td><td>'+money(m.interest)+'</td><td class="tax-amount">−'+money(m.tax)+'</td><td class="interest">+'+money(m.netInterest)+'</td><td>'+money(m.deposit)+'</td><td class="tax-amount">'+(m.stampDuty?'−'+money(m.stampDuty):'—')+'</td><td class="tax-amount">'+(m.monthlyFee?'−'+money(m.monthlyFee):'—')+'</td><td class="interest">'+signedMoney(m.netMonthlyBenefit)+'</td><td>'+money(m.closingBalance)+'</td></tr>').join('');
   $('tableCount').textContent='Showing '+rows.length+' of '+projection.months.length+' months';
 }
@@ -217,8 +230,9 @@ function drawDailyPeriod(){
 }
 function chart(){
   const svg=$('growthChart'), months=projection.months;
-  const primary=months.map(m=>chartMetric==='interest'?m.netMonthlyBenefit:m.closingBalance);
-  const secondary=months.map(m=>chartMetric==='interest'?m.interest:m.grossClosingBalance);
+  const fixed=settings.accountType==='fixed';
+  const primary=months.map(m=>chartMetric==='interest'?m.netMonthlyBenefit:fixed?m.overallValue:m.closingBalance);
+  const secondary=months.map(m=>chartMetric==='interest'?fixed?m.grossPaid:m.interest:m.grossClosingBalance);
   const W=760,H=264,L=65,R=10,T=12,B=20,pw=W-L-R,ph=H-T-B;
   const minValue=Math.min(0,...primary,...secondary);
   const maxValue=Math.max(0.01,...primary,...secondary);
@@ -238,10 +252,14 @@ function chart(){
   const last=coords[coords.length-1];
   const baselineY=mapY(0);
   svg.innerHTML=grid+'<line class="gridline" x1="'+L+'" x2="'+(W-R)+'" y1="'+baselineY+'" y2="'+baselineY+'"/><path class="chart-area" d="'+path(coords)+' L'+last.x+','+baselineY+' L'+L+','+baselineY+' Z"/><path class="chart-line-secondary" d="'+path(ghost)+'"/><path class="chart-line" d="'+path(coords)+'"/><line id="focusGuide" class="focus-guide" x1="0" x2="0" y1="'+T+'" y2="'+(T+ph)+'" style="display:none"/><circle id="focusDot" class="focus-dot" cx="0" cy="0" r="5" style="display:none"/><rect id="chartHit" x="'+L+'" y="'+T+'" width="'+pw+'" height="'+ph+'" fill="transparent"/>';
-  $('chartLegend').textContent=chartMetric==='interest'?'Net monthly benefit':'After-tax account balance';
-  $('chartSecondaryLegend').textContent=chartMetric==='interest'?'Gross monthly interest':'Balance without taxes';
+  $('chartLegend').textContent=fixed?(chartMetric==='interest'?'Net coupon less duty and fees':'Total wealth after selected costs')
+    :(chartMetric==='interest'?'Net monthly benefit':'After-tax account balance');
+  $('chartSecondaryLegend').textContent=fixed?(chartMetric==='interest'?'Gross coupon paid':'Locked principal + gross interest accrued')
+    :(chartMetric==='interest'?'Gross monthly interest':'Balance without taxes');
   $('chartEndLabel').textContent='Month '+months.length;
-  svg.setAttribute('aria-label',chartMetric==='interest'?'Net monthly benefit after tax and fees compared with gross interest':'After-tax balance compared with hypothetical balance before tax');
+  svg.setAttribute('aria-label',fixed?
+    (chartMetric==='interest'?'Quarterly or scheduled net coupons and gross coupons':'Total wealth after costs compared with gross accrued value')
+    :(chartMetric==='interest'?'Net monthly benefit after tax and fees compared with gross interest':'After-tax balance compared with hypothetical balance before tax'));
   for(const metric of ['interest','balance']){
     const b=$(metric+'ChartBtn');
     b.classList.toggle('active',chartMetric===metric);
@@ -279,6 +297,15 @@ function exportDailyCSV(){
   toast('Full daily statement exported.');
 }
 function exportCSV(){
+  if(settings.accountType==='fixed'){
+    const header=['Month','Locked principal','Gross interest accrued (simple)','Gross coupon paid','Tax withheld on coupon','Net coupon paid externally','Annual stamp duty','External monthly fee','Net monthly benefit','Cumulative net coupons','Cumulative stamp duty','Cumulative plan fees','Total wealth after all costs'];
+    const values=projection.months.map(m=>[m.index,m.openingBalance,m.interest,m.grossPaid,m.tax,m.netInterest,m.stampDuty,m.monthlyFee,m.netMonthlyBenefit,m.totalNetInterest,m.totalStampDuty,m.totalMonthlyFees,m.overallValue].map((v,i)=>i===0?String(v):Number(v).toFixed(2)).join(','));
+    const blob=new Blob(['\uFEFF'+[header.join(','),...values].join('\r\n')],{type:'text/csv;charset=utf-8;'});
+    const url=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=url;a.download='savings-studio-fixed-deposit.csv';
+    document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
+    toast('Fixed-term coupon statement exported.');return;
+  }
   const header=['Month','Year','Opening balance','Blended gross annual rate (%)','First-tier gross interest','Excess-tier gross interest','Gross interest','Tax withheld','Net interest credited','Additional contribution','Stamp duty','Plan fee (paid externally)','Net monthly benefit','Closing account balance','Cumulative tax','Cumulative stamp duty','Cumulative plan fees','Cumulative net interest'];
   const data=projection.months.map(m=>[m.index,m.year,m.openingBalance,blendedForDisplay(m.openingBalance),m.firstInterest,m.excessInterest,m.interest,m.tax,m.netInterest,m.deposit,m.stampDuty,m.monthlyFee,m.netMonthlyBenefit,m.closingBalance,m.totalTax,m.totalStampDuty,m.totalMonthlyFees,m.totalNetInterest].map((n,i)=>i<2?String(n):n===null?'':Number(n).toFixed(i===3?4:2)).join(','));
   const file=new Blob(['\uFEFF'+[header.join(','),...data].join('\r\n')],{type:'text/csv;charset=utf-8;'});
@@ -325,6 +352,24 @@ function init(){
   $('monthlyFeeEnabled').addEventListener('change',e=>{settings.monthlyFeeEnabled=e.target.checked;render();});
   $('tieredInterest').addEventListener('change',e=>{settings.tieredInterest=e.target.checked;render();});
   $('yearFilter').addEventListener('change',e=>{selectedYear=e.target.value;table();});
+  $('accountType').addEventListener('change',e=>{
+    settings.accountType=e.target.value;
+    selectedYear='1';selectedDailyPeriod='1';
+    if(settings.accountType==='fixed'){
+      settings.tieredInterest=false;
+      settings.monthlyDeposit=0;
+    }
+    render();
+  });
+  $('fixedTermMonths').addEventListener('change',e=>{settings.fixedTermMonths=Number(e.target.value);render();});
+  $('fixedPayoutFrequency').addEventListener('change',e=>{settings.fixedPayoutFrequency=e.target.value;render();});
+  $('cherryPresetBtn').addEventListener('click',()=>{
+    settings={...settings,accountType:'fixed',initialBalance:60000,firstAER:4.2,
+      fixedTermMonths:48,fixedPayoutFrequency:'quarterly',
+      tieredInterest:false,monthlyDeposit:0,stampDuty:true,stampRate:0.2,
+      monthlyFeeEnabled:false,taxRate:26,currency:'EUR'};
+    selectedYear='1';inputs();render();toast('Cherry-style 48-month example loaded.');
+  });
   $('creditFrequency').addEventListener('change',e=>{settings.creditFrequency=e.target.value;render();});
   $('startDate').addEventListener('change',e=>{settings.startDate=safeStartDate(e.target.value);selectedDailyPeriod='1';render();});
   $('dailyPeriodFilter').addEventListener('change',e=>{selectedDailyPeriod=e.target.value;drawDailyPeriod();});
